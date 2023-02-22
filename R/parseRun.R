@@ -12,6 +12,10 @@ parseRun <- function(yaml_path) {
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1))
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1))
 
+  ## clean step
+  x = EssReg::cleanData(x, y)$x
+  y = EssReg::cleanData(x, y)$y
+  
   x_std <- scale(x, T, T)
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
