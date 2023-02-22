@@ -24,7 +24,14 @@
 
 plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, lambda = 0.1,
                     rep_cv = 50, alpha_level = 0.05, out_path = NULL) {
+  
   ## Data Housekeeping #########################################################
+  
+  ## clean step - remove columns and rows with median = 0 and columns with sd = 0
+  x <- EssReg::cleanData(x, y)$x
+  y <- EssReg::cleanData(x, y)$y
+  
+  
   raw_y <- y
   raw_x <- x  # input raw x is now raw_x
 
