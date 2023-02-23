@@ -136,16 +136,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     valid_y_raw <- y[valid_ind] ## validation y's
     train_x_raw <- raw_x[-valid_ind, ]
     valid_x_raw <- matrix(raw_x[valid_ind, ], ncol = ncol(x))
-    
-    if (y_factor) {
-      # check whether we have all classes in our splits
-        unique_y_vals = length(unique(y))
-        
-        if ( length(unique(train_y_raw)) != unique_y_vals | length(unique(valid_y_raw)) != unique_y_vals ) {
-          cat(" skipping index in cross validation because groups are not represented in fold \n")
-          next
-          }
-      }
 
     # if we are doing z-scoring X within CV and z-scoring Y
     if (std_cv) {
@@ -177,6 +167,25 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     train_y_perm <- train_y[perm_ind]
     train_y_perm_raw <- train_y_raw[perm_ind]
 
+    if (y_factor) {
+    # check whether we have all classes in our splits
+      unique_y_vals = length(unique(y))
+
+      if ( length(unique(train_y_raw)) != unique_y_vals | length(unique(valid_y_raw)) != unique_y_vals ) {
+        cat(" skipping index in cross validation because groups are not represented in fold \n")
+        next
+        }
+      
+      while ( length(unique(train_y_perm)) != unique_y_vals ) {
+        cat(" resampling permuted y so groups are represented in fold\n")
+        
+        perm_ind <- sample(1:nrow(train_x_std))
+        train_y_perm <- train_y[perm_ind]
+        train_y_perm_raw <- train_y_raw[perm_ind]
+
+        }
+    }
+    
     ## get labels if factor
     if (y_factor) {
       train_y_labs <- factor(train_y_raw, levels = y_levels)
