@@ -130,11 +130,22 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   for (i in 1:k) { ## loop through folds
     cat("FOLD ", i, ". . . . \n")
     valid_ind <- group_inds[[i]] ## validation indices
+    
     cat("validation indices", valid_ind, "\n")
     train_y_raw <- y[-valid_ind] ## training y's
     valid_y_raw <- y[valid_ind] ## validation y's
     train_x_raw <- raw_x[-valid_ind, ]
     valid_x_raw <- matrix(raw_x[valid_ind, ], ncol = ncol(x))
+    
+    if (y_factor) {
+      # check whether we have all classes in our splits
+        unique_y_vals = length(unique(y))
+        
+        if ( length(unique(train_y_raw)) != unique_y_vals | length(unique(valid_y_raw)) != unique_y_vals ) {
+          cat(" skipping index in cross validation because groups are not represented in fold \n")
+          next
+          }
+      }
 
     # if we are doing z-scoring X within CV and z-scoring Y
     if (std_cv) {
@@ -285,7 +296,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
-                                     nfolds = 3,
+                                     nfolds = 5,
                                      standardize = F,
                                      grouped = F,
                                      family = lasso_fam)
@@ -293,7 +304,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
-                                     nfolds = 3,
+                                     nfolds = 10,
                                      standardize = F,
                                      grouped = F,
                                    family = lasso_fam)
