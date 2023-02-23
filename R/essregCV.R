@@ -171,10 +171,57 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     # check whether we have all classes in our splits
       unique_y_vals = length(unique(y))
 
-      if ( length(unique(train_y_raw)) != unique_y_vals | length(unique(valid_y_raw)) != unique_y_vals ) {
+      if ( length(unique(train_y_raw)) != unique_y_vals & length(unique(valid_y_raw)) != unique_y_vals ) {
         cat(" skipping index in cross validation because groups are not represented in fold \n")
         next
-        }
+      } else if ( length(unique(train_y_raw)) != unique_y_vals | length(unique(valid_y_raw)) != unique_y_vals ) {
+        cat(" swapping train_y and valid_y so groups are represented \n")
+        
+        swapping_train_y_raw = ifelse( length(unique(train_y_raw)) != unique_y_vals, TRUE, FALSE )
+        
+        swap_y = ifelse( swapping_train_y_raw, train_y_raw, valid_y_raw )
+        poorly_represented_y = ifelse( !swapping_train_y_raw, train_y_raw, valid_y_raw )
+        
+        # get factors not represented
+        factors_needed = which( !(unique(poorly_represented_y) %in% unique(swap_y)) )
+        
+        num_to_swap = ceiling( length(swap_y) / 2 )
+        
+        for (fac in factors_needed) {
+          
+          swap_y_inds = which( swap_y %in% fac )
+          
+          poorly_represented_y_inds = which( !(poorly_represented_y %in% fac) )
+          
+          num_to_swap = ceiling( length(swap_y_inds) / 2)
+          
+          if ( num_to_swap > length( poorly_represented_y_inds ) ){
+            # we want to switch as few as possible
+            num_to_swap = ceiling( length(poorly_represented_y_inds) / 2)
+          }
+          
+          swap_y_inds_to_switch = sample(swap_y_inds, num_to_swap)
+          swap_y_switch = swap_y[ swap_y_inds_to_switch ]
+          swap_y = swap_y[ -swap_y_inds_to_switch ]
+          
+          poorly_represented_y_inds_to_switch = sample(poorly_represented_y_inds, num_to_swap)
+          poorly_represented_y_switch = poorly_represented_y[ poorly_represented_y_inds_to_switch ]
+          poorly_represented_y = poorly_represented_y[ -poorly_represented_y_switch ]
+          
+          # make the switch
+          
+          swap_y = c(swap_y, poorly_represented_y_switch)
+          poorly_represented_y = c(poorly_represented_y, swap_y_switch)
+          
+          if (swapping_train_y_raw) {
+            train_y_raw = swap_y
+            valid_y_raw = poorly_represented_y
+          } else {
+            train_y_raw = poorly_represented_y
+            valid_y_raw = swap_y
+          }
+        }                     
+      }
       
       while ( length(unique(train_y_perm)) != unique_y_vals ) {
         cat(" resampling permuted y so groups are represented in fold\n")
@@ -183,7 +230,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         train_y_perm <- train_y[perm_ind]
         train_y_perm_raw <- train_y_raw[perm_ind]
 
-        }
+      }
     }
     
     ## get labels if factor
