@@ -130,32 +130,12 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   for (i in 1:k) { ## loop through folds
     cat("FOLD ", i, ". . . . \n")
     valid_ind <- group_inds[[i]] ## validation indices
-    
+
     cat("validation indices", valid_ind, "\n")
     train_y_raw <- y[-valid_ind] ## training y's
     valid_y_raw <- y[valid_ind] ## validation y's
     train_x_raw <- raw_x[-valid_ind, ]
     valid_x_raw <- matrix(raw_x[valid_ind, ], ncol = ncol(x))
-
-    # if we are doing z-scoring X within CV and z-scoring Y
-    if (std_cv) {
-      stands <- standCV(train_y = train_y_raw,
-                        train_x = train_x_raw,
-                        valid_y = valid_y_raw,
-                        valid_x = valid_x_raw)
-
-      train_x_std <- stands$train_x
-      train_y <- stands$train_y
-      valid_x_std <- stands$valid_x
-      valid_y <- stands$valid_y
-
-    # if we are z-scoring X outside of CV and not z-scoring Y
-    } else {
-      train_x_std <- x[-valid_ind, ] ## training x's
-      valid_x_std <- matrix(x[valid_ind, ], ncol = ncol(x)) ## validation x's
-      train_y <- train_y_raw
-      valid_y <- valid_y_raw
-    }
 
 
     ## rename columns
@@ -172,67 +152,108 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       unique_y_vals = length(unique(y))
 
       if ( length(unique(train_y_raw)) != unique_y_vals & length(unique(valid_y_raw)) != unique_y_vals ) {
-        cat(" skipping index in cross validation because groups are not represented in fold \n")
+        cat("\t skipping index in cross validation because groups are not represented in fold \n")
         next
       } else if ( length(unique(train_y_raw)) != unique_y_vals | length(unique(valid_y_raw)) != unique_y_vals ) {
-        cat(" swapping train_y and valid_y so groups are represented \n")
-        
+        cat("\t swapping train_y and valid_y so groups are represented \n")
+
         swapping_train_y_raw = ifelse( length(unique(train_y_raw)) != unique_y_vals, TRUE, FALSE )
-        
+
         swap_y = ifelse( swapping_train_y_raw, train_y_raw, valid_y_raw )
         poorly_represented_y = ifelse( !swapping_train_y_raw, train_y_raw, valid_y_raw )
-        
+
+        swap_x = ifelse( swapping_train_y_raw, train_x_raw, valid_x_raw )
+        poorly_represented_x = ifelse( !swapping_train_y_raw, train_x_raw, valid_x_raw )
+
         # get factors not represented
         factors_needed = which( !(unique(poorly_represented_y) %in% unique(swap_y)) )
-        
+
         num_to_swap = ceiling( length(swap_y) / 2 )
-        
+
         for (fac in factors_needed) {
-          
+
           swap_y_inds = which( swap_y %in% fac )
-          
+
           poorly_represented_y_inds = which( !(poorly_represented_y %in% fac) )
-          
+
           num_to_swap = ceiling( length(swap_y_inds) / 2)
-          
+
           if ( num_to_swap > length( poorly_represented_y_inds ) ){
             # we want to switch as few as possible
             num_to_swap = ceiling( length(poorly_represented_y_inds) / 2)
           }
-          
+
           swap_y_inds_to_switch = sample(swap_y_inds, num_to_swap)
           swap_y_switch = swap_y[ swap_y_inds_to_switch ]
-          swap_y = swap_y[ -swap_y_inds_to_switch ]
-          
+          # swap_y = swap_y[ -swap_y_inds_to_switch ]
+
+
+          swap_x_switch = swap_x[ swap_y_inds_to_switch ,]
+          # swap_x = swap_x[ -swap_y_inds_to_switch ,]
+
+
           poorly_represented_y_inds_to_switch = sample(poorly_represented_y_inds, num_to_swap)
           poorly_represented_y_switch = poorly_represented_y[ poorly_represented_y_inds_to_switch ]
-          poorly_represented_y = poorly_represented_y[ -poorly_represented_y_switch ]
-          
-          # make the switch
-          
-          swap_y = c(swap_y, poorly_represented_y_switch)
-          poorly_represented_y = c(poorly_represented_y, swap_y_switch)
-          
+          # poorly_represented_y = poorly_represented_y[ -poorly_represented_y_switch ]
+
+          poorly_represented_x_switch = poorly_represented_x[ swap_y_inds_to_switch ,]
+          # poorly_represented_x = poorly_represented_x[ -swap_y_inds_to_switch ,]
+
+
+          # make the switches
+          swap_y[ swap_y_inds_to_switch ] = poorly_represented_y_switch
+          poorly_represented_y[ poorly_represented_y_inds_to_switch ] = swap_y_switch
+
+          swap_x[ swap_y_inds_to_switch ,] = poorly_represented_x_switch
+          poorly_represented_y[ poorly_represented_y_inds_to_switch ,] = swap_x_switch
+
+
+
           if (swapping_train_y_raw) {
             train_y_raw = swap_y
             valid_y_raw = poorly_represented_y
+            train_x_raw = swap_x
+            valid_x_raw = poorly_represented_x
+
           } else {
             train_y_raw = poorly_represented_y
             valid_y_raw = swap_y
+            train_x_raw = poorly_represented_x
+            valid_x_raw = swap_x
           }
-        }                     
+        }
       }
-      
+
       while ( length(unique(train_y_perm)) != unique_y_vals ) {
         cat(" resampling permuted y so groups are represented in fold\n")
-        
+
         perm_ind <- sample(1:nrow(train_x_std))
         train_y_perm <- train_y[perm_ind]
         train_y_perm_raw <- train_y_raw[perm_ind]
 
       }
     }
-    
+
+    # if we are doing z-scoring X within CV and z-scoring Y
+    if (std_cv) {
+      stands <- standCV(train_y = train_y_raw,
+                        train_x = train_x_raw,
+                        valid_y = valid_y_raw,
+                        valid_x = valid_x_raw)
+
+      train_x_std <- stands$train_x
+      train_y <- stands$train_y
+      valid_x_std <- stands$valid_x
+      valid_y <- stands$valid_y
+
+      # if we are z-scoring X outside of CV and not z-scoring Y
+    } else {
+      train_x_std <- x[-valid_ind, ] ## training x's
+      valid_x_std <- matrix(x[valid_ind, ], ncol = ncol(x)) ## validation x's
+      train_y <- train_y_raw
+      valid_y <- valid_y_raw
+    }
+
     ## get labels if factor
     if (y_factor) {
       train_y_labs <- factor(train_y_raw, levels = y_levels)
