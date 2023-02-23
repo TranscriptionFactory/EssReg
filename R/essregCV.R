@@ -142,7 +142,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     colnames(train_x_std) <- colnames(valid_x_std) <- colnames(x)
 
     ## permute y's
-    perm_ind <- sample(1:nrow(train_x_std))
+    perm_ind <- sample(1:nrow(train_x_raw))
     # note that if std_cv == FALSE, train_y_perm == train_y_perm_raw
     train_y_perm <- train_y[perm_ind]
     train_y_perm_raw <- train_y_raw[perm_ind]
@@ -227,7 +227,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       while ( length(unique(train_y_perm)) != unique_y_vals ) {
         cat(" resampling permuted y so groups are represented in fold\n")
 
-        perm_ind <- sample(1:nrow(train_x_std))
+        perm_ind <- sample(1:nrow(train_x_raw))
         train_y_perm <- train_y[perm_ind]
         train_y_perm_raw <- train_y_raw[perm_ind]
 
