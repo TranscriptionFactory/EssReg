@@ -13,8 +13,8 @@ parseRun <- function(yaml_path) {
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1))
 
   ## clean step
-  x <- EssReg::cleanData(x, y)$x
-  y <- EssReg::cleanData(x, y)$y
+  x <- cleanData(x, y)$x
+  y <- cleanData(x, y)$y
   
   x_std <- scale(x, T, T)
 
