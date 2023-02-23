@@ -1,4 +1,4 @@
-
+#' @export
 cleanData <- function(xdata, ydata) {
 
   # make sure in same order
