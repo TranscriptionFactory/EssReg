@@ -138,8 +138,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     valid_x_raw <- matrix(raw_x[valid_ind, ], ncol = ncol(x))
 
 
-    ## rename columns
-    colnames(train_x_std) <- colnames(valid_x_std) <- colnames(x)
 
     ## permute y's
     perm_ind <- sample(1:nrow(train_x_raw))
@@ -253,6 +251,9 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       train_y <- train_y_raw
       valid_y <- valid_y_raw
     }
+
+    ## rename columns
+    colnames(train_x_std) <- colnames(valid_x_std) <- colnames(x)
 
     ## get labels if factor
     if (y_factor) {
