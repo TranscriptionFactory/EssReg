@@ -28,8 +28,8 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
   ## Data Housekeeping #########################################################
   
   ## clean step - remove columns and rows with median = 0 and columns with sd = 0
-  x <- EssReg::cleanData(x, y)$x
-  y <- EssReg::cleanData(x, y)$y
+  x <- cleanData(x, y)$x
+  y <- cleanData(x, y)$y
   
   
   raw_y <- y
