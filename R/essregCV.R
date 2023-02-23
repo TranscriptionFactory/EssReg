@@ -285,17 +285,17 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
-                                     nfolds = 5,
-                                     standardize = T,
-                                     grouped = T,
+                                     nfolds = 3,
+                                     standardize = F,
+                                     grouped = F,
                                      family = lasso_fam)
           } else {
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
-                                     nfolds = 10,
-                                     standardize = T,
-                                     grouped = T,
+                                     nfolds = 3,
+                                     standardize = F,
+                                     grouped = F,
                                    family = lasso_fam)
         }
         beta_hat <- coef(res, s = res$lambda.min)[-1]
