@@ -187,7 +187,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
           poorly_represented_y_switch = poorly_represented_y[ poorly_represented_y_inds_to_switch ]
           # poorly_represented_y = poorly_represented_y[ -poorly_represented_y_switch ]
 
-          poorly_represented_x_switch = poorly_represented_x[ swap_y_inds_to_switch ,]
+          poorly_represented_x_switch = poorly_represented_x[  poorly_represented_y_inds_to_switch ,]
           # poorly_represented_x = poorly_represented_x[ -swap_y_inds_to_switch ,]
 
           # make the switches
@@ -212,15 +212,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
           }
         }
       }
-#
-#       while ( length(unique(train_y_perm)) != unique_y_vals ) {
-#         cat(" resampling permuted y so groups are represented in fold\n")
-#
-#         perm_ind <- sample(1:nrow(train_x_raw))
-#         train_y_perm <- train_y[perm_ind]
-#         train_y_perm_raw <- train_y_raw[perm_ind]
-#
-#       }
     }
 
     # if we are doing z-scoring X within CV and z-scoring Y
