@@ -169,33 +169,33 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
 
           num_to_swap = ceiling( length(swap_y_inds) / 2)
 
-          if ( num_to_swap > length( poorly_represented_y_inds ) ){
+          if ( num_to_swap > length( ceiling(poorly_represented_y_inds / 2 ) ) ){
             # we want to switch as few as possible
             num_to_swap = ceiling( length(poorly_represented_y_inds) / 2)
           }
 
           swap_y_inds_to_switch = sample(swap_y_inds, num_to_swap)
-          swap_y_switch = swap_y[ swap_y_inds_to_switch ]
+          swap_y_switch = swap_y[swap_y_inds_to_switch]
           # swap_y = swap_y[ -swap_y_inds_to_switch ]
 
 
-          swap_x_switch = swap_x[ swap_y_inds_to_switch ,]
+          swap_x_switch = swap_x[ swap_y_inds_to_switch, ]
           # swap_x = swap_x[ -swap_y_inds_to_switch ,]
 
 
           poorly_represented_y_inds_to_switch = sample(poorly_represented_y_inds, num_to_swap)
-          poorly_represented_y_switch = poorly_represented_y[ poorly_represented_y_inds_to_switch ]
+          poorly_represented_y_switch = poorly_represented_y[poorly_represented_y_inds_to_switch]
           # poorly_represented_y = poorly_represented_y[ -poorly_represented_y_switch ]
 
-          poorly_represented_x_switch = poorly_represented_x[  poorly_represented_y_inds_to_switch ,]
+          poorly_represented_x_switch = poorly_represented_x[poorly_represented_y_inds_to_switch, ]
           # poorly_represented_x = poorly_represented_x[ -swap_y_inds_to_switch ,]
 
           # make the switches
-          swap_y[ swap_y_inds_to_switch ] = poorly_represented_y_switch
-          poorly_represented_y[ poorly_represented_y_inds_to_switch ] = swap_y_switch
+          swap_y[swap_y_inds_to_switch] = poorly_represented_y_switch
+          poorly_represented_y[poorly_represented_y_inds_to_switch] = swap_y_switch
 
-          swap_x[ swap_y_inds_to_switch ,] = poorly_represented_x_switch
-          poorly_represented_y[ poorly_represented_y_inds_to_switch ,] = swap_x_switch
+          swap_x[swap_y_inds_to_switch, ] = poorly_represented_x_switch
+          poorly_represented_x[poorly_represented_y_inds_to_switch, ] = swap_x_switch
 
 
           if (swapping_train_y_raw) {
