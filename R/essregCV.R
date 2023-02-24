@@ -163,9 +163,9 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
 
         for (fac in factors_needed) {
 
-          swap_y_inds = which( swap_y %in% fac )
+          swap_y_inds = which( swap_y == fac )
 
-          poorly_represented_y_inds = which( !(poorly_represented_y %in% fac) )
+          poorly_represented_y_inds = which( !(poorly_represented_y == fac) )
 
           num_to_swap = ceiling( length(swap_y_inds) / 2)
 
@@ -179,7 +179,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
           # swap_y = swap_y[ -swap_y_inds_to_switch ]
 
 
-          swap_x_switch = swap_x[ swap_y_inds_to_switch, ]
+          swap_x_switch = swap_x[swap_y_inds_to_switch, ]
           # swap_x = swap_x[ -swap_y_inds_to_switch ,]
 
 
