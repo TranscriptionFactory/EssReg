@@ -75,7 +75,7 @@ pipelineER1 <- function(yaml_path, steps = "all") {
       if (file.exists(paste0(er_input$out_path, "essregCV_delta_", mag_delta, ".rds"))) {
         delta_rep <- readRDS(paste0(er_input$out_path, "essregCV_delta_", mag_delta, ".rds"))
       } else {
-        delta_rep <- foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
+        foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
           if (file.exists(file = paste0(er_input$out_path, "delta_", mag_delta, "/replicate", j, "/output_table.rds"))) {
             readRDS(paste0(er_input$out_path, "delta", mag_delta, "/replicate", j, "/output_table.rds"))
           } else {
@@ -100,8 +100,8 @@ pipelineER1 <- function(yaml_path, steps = "all") {
             }
             result
           }
-        }# -> delta_rep
-        #saveRDS(delta_rep, file = paste0(er_input$out_path, "essregCV_delta_", mag_delta, ".rds"))
+        } -> delta_rep
+        saveRDS(delta_rep, file = paste0(er_input$out_path, "essregCV_delta_", mag_delta, ".rds"))
       }
       ## make CV plot
       if (er_input$eval_type == "auc") {
