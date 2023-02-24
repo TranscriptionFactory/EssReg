@@ -18,11 +18,11 @@ pipelineER2 <- function(yaml_path, steps = "all") {
   er_input <- yaml::yaml.load_file(yaml_path)
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1)) ## not standardized
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1)) ## not standardized
-  
+
   ## clean step
   x <- cleanData(x, y)$x
   y <- cleanData(x, y)$y
-  
+
   x_std <- scale(x, T, T)
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
@@ -109,8 +109,7 @@ pipelineER2 <- function(yaml_path, steps = "all") {
             result
           }
         } -> lambda_rep
-
-        #saveRDS(lambda_rep, file = paste0(er_input$out_path, "essregCV_lambda_", lambda, ".rds"))
+        saveRDS(lambda_rep, file = paste0(er_input$out_path, "essregCV_lambda_", lambda, ".rds"))
       }
 
       ## make CV plot
