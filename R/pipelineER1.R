@@ -25,8 +25,8 @@ pipelineER1 <- function(yaml_path, steps = "all") {
 
   x_std <- scale(x, T, T)
 
-  if (er_input$k == "LOOCV") {
-    er_input$k = length(y) - 1
+  if (er_input$k <= 0) {
+    er_input$k <- length(y) - 1
   }
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)

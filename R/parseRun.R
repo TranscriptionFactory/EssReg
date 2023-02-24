@@ -15,8 +15,12 @@ parseRun <- function(yaml_path) {
   ## clean step
   x <- cleanData(x, y)$x
   y <- cleanData(x, y)$y
-  
+
   x_std <- scale(x, T, T)
+
+  if (er_input$k <= 0) {
+    er_input$k <- length(y) - 1
+  }
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
 
