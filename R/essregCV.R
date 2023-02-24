@@ -437,7 +437,11 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       method_roc <- ROCR::prediction(predicted, true)
       print("after prediction")
       method_auc <- ROCR::performance(method_roc, "auc")
+
+      cat("before methodauc\n")
       method_auc <- method_auc@y.values[[1]]
+
+      cat("after methodauc\n")
       if (method_auc < 0.5) { ## if classifier auc is < 0.5, reverse it to be > 0.5
         method_auc <- 1 - method_auc
       }
@@ -463,7 +467,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   final_results <- as.data.frame(final_results)
   final_results[, 2] <- as.numeric(final_results[, 2])
 
-  combined_res <- NULL
+  combined_res <- list()
   combined_res$each_fold <- results
   combined_res$final_corr <- final_results
   saveRDS(combined_res, file = paste0(new_dir, "results.rds"))
