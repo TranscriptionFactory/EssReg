@@ -157,11 +157,11 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         poorly_represented_x = ifelse( !swapping_train_y_raw, train_x_raw, valid_x_raw )
 
         # get factors not represented
-        factors_needed = which( !(unique(poorly_represented_y) %in% unique(swap_y)) )
+        factors_needed = which( !(unique(swap_y) %in% unique(poorly_represented_y)) )
 
         num_to_swap = ceiling( length(swap_y) / 2 )
 
-        for (fac in factors_needed) {
+        for (fac in unique(swap_y)[factors_needed]) {
 
           swap_y_inds = which( swap_y == fac )
 
