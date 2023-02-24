@@ -244,13 +244,27 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
 
     ## get labels if factor
     if (y_factor) {
-      while ( length(unique(train_y_perm)) != unique_y_vals ) {
-        cat(" resampling permuted y so groups are represented in fold\n")
 
-        perm_ind <- sample(1:nrow(train_x_std))
-        train_y_perm <- train_y[perm_ind]
-        train_y_perm_raw <- train_y_raw[perm_ind]
+      needed_levels = c()
+      for (l in unique(train_y_perm_raw)) {
+
+        while ( length(which(train_y_perm_raw == l)) <= 1) {
+          # needed_levels = c(needed_levels, l)
+          cat(" resampling permuted y so groups are represented in fold\n")
+
+          perm_ind <- sample(1:nrow(train_x_std))
+          train_y_perm <- train_y[perm_ind]
+          train_y_perm_raw <- train_y_raw[perm_ind]
+        }
       }
+
+      # while ( length(unique(train_y_perm_raw)) < unique_y_vals ) {
+      #   cat(" resampling permuted y so groups are represented in fold\n")
+      #
+      #   perm_ind <- sample(1:nrow(train_x_std))
+      #   train_y_perm <- train_y[perm_ind]
+      #   train_y_perm_raw <- train_y_raw[perm_ind]
+      # }
 
       train_y_labs <- factor(train_y_raw, levels = y_levels)
       train_y_labs_perm <- factor(train_y_perm_raw, levels = y_levels)
