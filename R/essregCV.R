@@ -252,7 +252,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     ## get labels if factor
     if (y_factor) {
 
-      needed_levels = c()
       for (l in unique(train_y_perm_raw)) {
 
         while ( length(which(train_y_perm_raw == l)) <= 1) {

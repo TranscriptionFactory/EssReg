@@ -16,11 +16,15 @@ pipelineER3 <- function(yaml_path) {
   er_input <- yaml::yaml.load_file(yaml_path)
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1)) ## not standardized
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1)) ## not standardized
-  
+
   ## clean step
   x <- cleanData(x, y)$x
   y <- cleanData(x, y)$y
-  
+
+  if (er_input$k == "LOOCV") {
+    er_input$k = length(y) - 1
+  }
+
   x_std <- scale(x, T, T)
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)

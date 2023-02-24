@@ -15,7 +15,6 @@ cleanData <- function(xdata, ydata) {
     ydata <- ydata[-empty_rows]
   }
 
-
   empty_cols <- which(apply(xdata, 2, median) == 0)
 
   # remove zero SD too
