@@ -26,7 +26,7 @@ pipelineER2 <- function(yaml_path, steps = "all") {
   x_std <- scale(x, T, T)
 
   if (er_input$k <= 0) {
-    er_input$k <- length(y) - 1
+    er_input$k <- length(y)
   }
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
 
