@@ -36,6 +36,10 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   if (eval_type == "auc") {
     lasso_fam <- "binomial"
     y_factor <- T
+
+    if (length(unique(y)) > 2) {
+      lasso_fam = "multinomial"
+    }
   } else { ## if evaluating with correlation, treat y as continuous (regardless of truth)
     lasso_fam <- "gaussian"
     y_factor <- F
