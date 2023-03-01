@@ -269,12 +269,12 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       #   }
       # }
 
-      # train_y_labs <- factor(train_y_raw, levels = y_levels)
-      # train_y_labs_perm <- factor(train_y_perm_raw, levels = y_levels)
-      # valid_y_labs <- factor(valid_y_raw, levels = y_levels)
-      train_y_labs <- factor(train_y_raw)
-      train_y_labs_perm <- factor(train_y_perm_raw)
-      valid_y_labs <- factor(valid_y_raw)
+      train_y_labs <- factor(train_y_raw, levels = y_levels)
+      train_y_labs_perm <- factor(train_y_perm_raw, levels = y_levels)
+      valid_y_labs <- factor(valid_y_raw, levels = y_levels)
+      # train_y_labs <- factor(train_y_raw)
+      # train_y_labs_perm <- factor(train_y_perm_raw)
+      # valid_y_labs <- factor(valid_y_raw)
     }
     #cat("permuted y: ", train_y_labs_perm, "\n")
 
