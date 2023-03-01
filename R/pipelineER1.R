@@ -25,11 +25,6 @@ pipelineER1 <- function(yaml_path, steps = "all") {
 
   x_std <- scale(x, T, T)
 
-  if (er_input$k <= 0) {
-    er_input$k <- nrow(y)
-    cat(" Using LOOCV \n")
-  }
-
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
 
   if (er_input$y_factor) {
@@ -37,6 +32,11 @@ pipelineER1 <- function(yaml_path, steps = "all") {
     saveRDS(y, file = paste0(er_input$out_path, "pipeline1_y_mapping.rds"))
     orig_y <- y$cat_y
     y <- y$cont_y
+  }
+
+  if (er_input$k <= 0) {
+    er_input$k <- nrow(x)
+    cat(" Using LOOCV \n")
   }
 
   deltas <- list(seq(0.0001, 0.001, 0.0001),
