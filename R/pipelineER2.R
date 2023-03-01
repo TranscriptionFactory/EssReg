@@ -25,9 +25,6 @@ pipelineER2 <- function(yaml_path, steps = "all") {
 
   x_std <- scale(x, T, T)
 
-  if (er_input$k <= 0) {
-    er_input$k <- length(y)
-  }
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
 
   if (er_input$y_factor) {
@@ -35,6 +32,11 @@ pipelineER2 <- function(yaml_path, steps = "all") {
     saveRDS(y, file = paste0(er_input$out_path, "pipeline2_y_mapping.rds"))
     orig_y <- y$cat_y
     y <- y$cont_y
+  }
+
+
+  if (er_input$k <= 0) {
+    er_input$k <- length(y)
   }
 
   ## Step 3: Fine Delta Search ###############################################

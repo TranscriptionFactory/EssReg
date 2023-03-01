@@ -142,7 +142,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     train_x_raw <- raw_x[-valid_ind, ]
     valid_x_raw <- matrix(raw_x[valid_ind, ], ncol = ncol(x))
 
-    unique_y_vals = length(unique(y))
     # cat("lengths - train_y, valid_y, train_x, valid_x\n")
     # cat(paste0(length(train_y_raw), " ", length(valid_y_raw), " ",
     #            nrow(train_x_raw), " ", ncol(train_x_raw), " ",
@@ -389,7 +388,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
-                                     nfolds = 5,
+                                     nfolds = nrow(train_x_std),
                                      standardize = F,
                                      grouped = F,
                                      family = lasso_fam)
