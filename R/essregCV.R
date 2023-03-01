@@ -385,6 +385,9 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         pred_vals <- predict(res, newdata = as.data.frame(valid_pcs), type = "response") ## predict validation set values
       } else { ## lasso for comparison
           if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
+            cat("using LOOCV in cv.glmnet\n")
+            cat(use_y_train)
+            cat("\n")
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
