@@ -39,6 +39,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
 
     if (length(unique(y)) > 2) {
       lasso_fam = "multinomial"
+      cat("Using multinomial \n")
     }
   } else { ## if evaluating with correlation, treat y as continuous (regardless of truth)
     lasso_fam <- "gaussian"
@@ -248,7 +249,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     ## rename columns
     colnames(train_x_std) <- colnames(valid_x_std) <- colnames(x)
 
-    perm_ind <- sample(1:nrow(train_x_std))
+    perm_ind <- sample(1:nrow(train_y))
     # note that if std_cv == FALSE, train_y_perm == train_y_perm_raw
     train_y_perm <- train_y[perm_ind]
     train_y_perm_raw <- train_y_raw[perm_ind]
