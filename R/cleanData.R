@@ -25,8 +25,8 @@ cleanData <- function(xdata, ydata) {
   # remove zero SD too
   zero_sd <- which(apply(xdata, 2, sd) == 0)
 
-  bad_cols <- base::union(empty_cols, zero_sd)
-
+  #bad_cols <- base::union(empty_cols, zero_sd)
+  bad_cols <- zero_sd
    # check if we need to remove any columns
   if (length(bad_cols) > 0) {
     xdata <- xdata[, -bad_cols]
