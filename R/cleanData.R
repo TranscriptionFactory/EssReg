@@ -3,7 +3,8 @@ cleanData <- function(xdata, ydata) {
 
   # make sure in same order
   y_correct_order <- match(rownames(xdata), rownames(ydata))
-  ydata <- ydata[y_correct_order,]
+  ydata <- ydata[y_correct_order]
+
 
   # get median cols
   empty_rows <- which(apply(xdata, 1, median) == 0)
@@ -14,6 +15,10 @@ cleanData <- function(xdata, ydata) {
     xdata <- xdata[-empty_rows,]
     ydata <- ydata[-empty_rows]
   }
+
+  # fix ydata rownames
+  ydata = as.matrix(ydata)
+  rownames(ydata) = rownames(xdata)
 
   empty_cols <- which(apply(xdata, 2, median) == 0)
 
