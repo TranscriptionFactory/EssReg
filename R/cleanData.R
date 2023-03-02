@@ -17,8 +17,8 @@ cleanData <- function(xdata, ydata) {
   }
 
   # fix ydata rownames
-  ydata = as.matrix(ydata)
-  rownames(ydata) = rownames(xdata)
+  ydata <- as.matrix(ydata)
+  rownames(ydata) <- rownames(xdata)
 
   empty_cols <- which(apply(xdata, 2, median) == 0)
 
