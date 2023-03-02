@@ -36,11 +36,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   if (eval_type == "auc") {
     lasso_fam <- "binomial"
     y_factor <- T
-
-    if (length(unique(y)) > 2) {
-      lasso_fam = "multinomial"
-      cat("Using multinomial \n")
-    }
   } else { ## if evaluating with correlation, treat y as continuous (regardless of truth)
     lasso_fam <- "gaussian"
     y_factor <- F
@@ -135,95 +130,11 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   for (i in 1:k) { ## loop through folds
     cat("FOLD ", i, ". . . . \n")
     valid_ind <- group_inds[[i]] ## validation indices
-
     cat("validation indices", valid_ind, "\n")
     train_y_raw <- y[-valid_ind] ## training y's
     valid_y_raw <- y[valid_ind] ## validation y's
     train_x_raw <- raw_x[-valid_ind, ]
     valid_x_raw <- matrix(raw_x[valid_ind, ], ncol = ncol(x))
-
-    # cat("lengths - train_y, valid_y, train_x, valid_x\n")
-    # cat(paste0(length(train_y_raw), " ", length(valid_y_raw), " ",
-    #            nrow(train_x_raw), " ", ncol(train_x_raw), " ",
-    #            nrow(valid_x_raw), " ", ncol(valid_x_raw)))
-   #  if (y_factor) {
-   #  # check whether we have all classes in our splits
-   #
-   #    if ( length(unique(train_y_raw)) != unique_y_vals & length(unique(valid_y_raw)) != unique_y_vals ) {
-   #      cat("\t skipping index in cross validation because groups are not represented in fold \n")
-   #      next
-   #    } else if ( length(unique(train_y_raw)) != unique_y_vals | length(unique(valid_y_raw)) != unique_y_vals ) {
-   #      cat("\t swapping train_y and valid_y so groups are represented \n")
-   #
-   #      swapping_train_y_raw = ifelse( length(unique(train_y_raw)) != unique_y_vals, TRUE, FALSE )
-   #
-   #      swap_y = ifelse( swapping_train_y_raw, train_y_raw, valid_y_raw )
-   #      poorly_represented_y = ifelse( !swapping_train_y_raw, train_y_raw, valid_y_raw )
-   #
-   #      swap_x = ifelse( swapping_train_y_raw, train_x_raw, valid_x_raw )
-   #      poorly_represented_x = ifelse( !swapping_train_y_raw, train_x_raw, valid_x_raw )
-   #
-   #      # get factors not represented
-   #      factors_needed = which( !(unique(swap_y) %in% unique(poorly_represented_y)) )
-   #
-   #      num_to_swap = ceiling( length(swap_y) / 2 )
-   #
-   #      for (fac in unique(swap_y)[factors_needed]) {
-   #
-   #        swap_y_inds = which( swap_y == fac )
-   #
-   #        poorly_represented_y_inds = which( !(poorly_represented_y == fac) )
-   #
-   #        num_to_swap = ceiling( length(swap_y_inds) / 2)
-   #
-   #        if ( num_to_swap > length( ceiling(poorly_represented_y_inds / 2 ) ) ){
-   #          # we want to switch as few as possible
-   #          num_to_swap = ceiling( length(poorly_represented_y_inds) / 2)
-   #        }
-   #
-   #        swap_y_inds_to_switch = sample(swap_y_inds, num_to_swap)
-   #        swap_y_switch = swap_y[swap_y_inds_to_switch]
-   #        # swap_y = swap_y[ -swap_y_inds_to_switch ]
-   #
-   #
-   #        swap_x_switch = swap_x[swap_y_inds_to_switch, ]
-   #        # swap_x = swap_x[ -swap_y_inds_to_switch ,]
-   #
-   #
-   #        poorly_represented_y_inds_to_switch = sample(poorly_represented_y_inds, num_to_swap)
-   #        poorly_represented_y_switch = poorly_represented_y[poorly_represented_y_inds_to_switch]
-   #        # poorly_represented_y = poorly_represented_y[ -poorly_represented_y_switch ]
-   #
-   #        poorly_represented_x_switch = poorly_represented_x[poorly_represented_y_inds_to_switch, ]
-   #        # poorly_represented_x = poorly_represented_x[ -swap_y_inds_to_switch ,]
-   #
-   #        # make the switches
-   #        swap_y[swap_y_inds_to_switch] = poorly_represented_y_switch
-   #        poorly_represented_y[poorly_represented_y_inds_to_switch] = swap_y_switch
-   #
-   #        swap_x[swap_y_inds_to_switch, ] = poorly_represented_x_switch
-   #        poorly_represented_x[poorly_represented_y_inds_to_switch, ] = swap_x_switch
-   #
-   #
-   #        if (swapping_train_y_raw) {
-   #          train_y_raw = swap_y
-   #          valid_y_raw = poorly_represented_y
-   #          train_x_raw = swap_x
-   #          valid_x_raw = poorly_represented_x
-   #
-   #        } else {
-   #          train_y_raw = poorly_represented_y
-   #          valid_y_raw = swap_y
-   #          train_x_raw = poorly_represented_x
-   #          valid_x_raw = swap_x
-   #        }
-   #      }
-   #    }
-   #    cat("lengths after swap - train_y, valid_y, train_x, valid_x\n")
-   #    cat(paste0(length(train_y_raw), " ", length(valid_y_raw), " ",
-   #               nrow(train_x_raw), " ", ncol(train_x_raw), " ",
-   #               nrow(valid_x_raw), " ", ncol(valid_x_raw)))
-   # }
 
     # if we are doing z-scoring X within CV and z-scoring Y
     if (std_cv) {
@@ -245,35 +156,21 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       valid_y <- valid_y_raw
     }
 
+
     ## rename columns
     colnames(train_x_std) <- colnames(valid_x_std) <- colnames(x)
 
-    perm_ind <- sample(1:length(train_y))
+    ## permute y's
+    perm_ind <- sample(1:nrow(train_x_std))
     # note that if std_cv == FALSE, train_y_perm == train_y_perm_raw
     train_y_perm <- train_y[perm_ind]
     train_y_perm_raw <- train_y_raw[perm_ind]
 
     ## get labels if factor
     if (y_factor) {
-
-      # for (l in unique(train_y_perm_raw)) {
-      #
-      #   while ( length(which(train_y_perm_raw == l)) <= 1) {
-      #     # needed_levels = c(needed_levels, l)
-      #     cat(" resampling permuted y so groups are represented in fold\n")
-      #
-      #     perm_ind <- sample(1:nrow(train_x_std))
-      #     train_y_perm <- train_y[perm_ind]
-      #     train_y_perm_raw <- train_y_raw[perm_ind]
-      #   }
-      # }
-
       train_y_labs <- factor(train_y_raw, levels = y_levels)
       train_y_labs_perm <- factor(train_y_perm_raw, levels = y_levels)
       valid_y_labs <- factor(valid_y_raw, levels = y_levels)
-      # train_y_labs <- factor(train_y_raw)
-      # train_y_labs_perm <- factor(train_y_perm_raw)
-      # valid_y_labs <- factor(valid_y_raw)
     }
     #cat("permuted y: ", train_y_labs_perm, "\n")
 
@@ -384,32 +281,21 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         res <- stats::glm(as.numeric(as.character(use_y_train)) ~ ., data = as.data.frame(train_pcs), family = "binomial") ## make model
         pred_vals <- predict(res, newdata = as.data.frame(valid_pcs), type = "response") ## predict validation set values
       } else { ## lasso for comparison
-        if ((nrow(train_x_std) / 10) < 2) {
-          cat("using LOOCV in cv.glmnet\n")
-
+        if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
           res <- glmnet::cv.glmnet(train_x_std,
                                    use_y_train,
                                    alpha = 1,
-                                   nfolds = nrow(train_x_std),
+                                   nfolds = 5,
                                    standardize = F,
                                    grouped = F,
                                    family = lasso_fam)
-        }
-        if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
-            res <- glmnet::cv.glmnet(train_x_std,
-                                     use_y_train,
-                                     alpha = 1,
-                                     nfolds = 5,
-                                     standardize = F,
-                                     grouped = F,
-                                     family = lasso_fam)
-          } else {
-            res <- glmnet::cv.glmnet(train_x_std,
-                                     use_y_train,
-                                     alpha = 1,
-                                     nfolds = 10,
-                                     standardize = F,
-                                     grouped = F,
+        } else {
+          res <- glmnet::cv.glmnet(train_x_std,
+                                   use_y_train,
+                                   alpha = 1,
+                                   nfolds = 10,
+                                   standardize = F,
+                                   grouped = F,
                                    family = lasso_fam)
         }
         beta_hat <- coef(res, s = res$lambda.min)[-1]
@@ -493,7 +379,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   final_results <- as.data.frame(final_results)
   final_results[, 2] <- as.numeric(final_results[, 2])
 
-  combined_res <- list()
+  combined_res <- NULL
   combined_res$each_fold <- results
   combined_res$final_corr <- final_results
   saveRDS(combined_res, file = paste0(new_dir, "results.rds"))
