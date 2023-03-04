@@ -24,7 +24,7 @@ pipelineER3 <- function(yaml_path) {
   cleanedData <- cleanData(x, y)
   x <- cleanedData$x
   y <- cleanedData$y
-  
+
   if (er_input$y_factor) {
     y <- toCont(y, er_input$y_levels)
     saveRDS(y, file = paste0(er_input$out_path, "pipeline3_y_mapping.rds"))
@@ -35,27 +35,50 @@ pipelineER3 <- function(yaml_path) {
   if (er_input$k <= 0) {
     er_input$k <- length(y) #LOOCV
   }
-  
+
   ##  Step 5: K-Fold Cross-Validation With Optimal Delta and Lambda  ###########
   foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
     temp <- NULL
     while (is.null(temp)) {
-      temp <- essregCV(k = er_input$k,
-                       x = x,
-                       y = y,
-                       std_y = er_input$std_y,
-                       std_cv = er_input$std_cv,
-                       delta = er_input$delta,
-                       permute = er_input$permute,
-                       eval_type = er_input$eval_type,
-                       y_levels = er_input$y_levels,
-                       lambda = er_input$lambda,
-                       out_path = er_input$out_path,
-                       rep_cv = er_input$rep_cv,
-                       alpha_level = er_input$alpha_level,
-                       thresh_fdr = er_input$thresh_fdr,
-                       rep = j,
-                       benchmark = er_input$benchmark)
+
+      parms = paste0("lambda = ", er_input$lambda, " delta = ", er_input$delta, "\n")
+
+      temp <- tryCatch({
+
+       essregCV(k = er_input$k,
+                         x = x,
+                         y = y,
+                         std_y = er_input$std_y,
+                         std_cv = er_input$std_cv,
+                         delta = er_input$delta,
+                         permute = er_input$permute,
+                         eval_type = er_input$eval_type,
+                         y_levels = er_input$y_levels,
+                         lambda = er_input$lambda,
+                         out_path = er_input$out_path,
+                         rep_cv = er_input$rep_cv,
+                         alpha_level = er_input$alpha_level,
+                         thresh_fdr = er_input$thresh_fdr,
+                         rep = j,
+                         benchmark = er_input$benchmark)
+      }, warning = function(w) {
+
+        cat("warning with ")
+        cat(parms)
+
+        return()
+
+      }, error = function(e) {
+
+        cat("error with ")
+        cat(parms)
+
+        return()
+      }, finally = {
+
+        cat("essregcv run complete with ")
+        cat(parms)
+      })
     }
     temp
   } -> lambda_rep
@@ -93,7 +116,7 @@ pipelineER3 <- function(yaml_path) {
                                                    y = auc,
                                                    fill = method_perm,
                                                    alpha = alpha)) +
-      ggplot2::geom_violin() +
+      ggplot2::geom_boxplot() +
       ggplot2::labs(fill = "Method") +
       ggplot2::scale_alpha(guide = 'none')
   }
