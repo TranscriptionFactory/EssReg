@@ -4,7 +4,7 @@ cleanData <- function(xdata, ydata, mode = 0,
                       remove_zero_median_rows = F,
                       er_input = NULL) {
 
-  if (!is.null(er_input)) {
+  if (any(!is.null(er_input))) {
     mode = er_input$mode
     quantile_filter = ifelse(is.null(er_input$quantile_filter), 0.0, er_input$quantile_filter)
     remove_zero_median_cols = ifelse(is.null(er_input$remove_zero_median_cols), F, er_input$remove_zero_median_cols)
