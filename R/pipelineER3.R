@@ -24,7 +24,7 @@ pipelineER3 <- function(yaml_path) {
   cleanedData <- cleanData(x, y)
   x <- cleanedData$x
   y <- cleanedData$y
-  
+
   if (er_input$y_factor) {
     y <- toCont(y, er_input$y_levels)
     saveRDS(y, file = paste0(er_input$out_path, "pipeline3_y_mapping.rds"))
@@ -35,7 +35,7 @@ pipelineER3 <- function(yaml_path) {
   if (er_input$k <= 0) {
     er_input$k <- length(y) #LOOCV
   }
-  
+
   ##  Step 5: K-Fold Cross-Validation With Optimal Delta and Lambda  ###########
   foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
     temp <- NULL
@@ -84,7 +84,7 @@ pipelineER3 <- function(yaml_path) {
                                                    y = corr,
                                                    fill = method_perm,
                                                    alpha = alpha)) +
-      ggplot2::geom_violin() +
+      ggplot2::geom_boxplot() +
       ggplot2::labs(fill = "Method") +
       ggplot2::scale_alpha(guide = 'none')
   } else {
@@ -93,7 +93,7 @@ pipelineER3 <- function(yaml_path) {
                                                    y = auc,
                                                    fill = method_perm,
                                                    alpha = alpha)) +
-      ggplot2::geom_violin() +
+      ggplot2::geom_boxplot() +
       ggplot2::labs(fill = "Method") +
       ggplot2::scale_alpha(guide = 'none')
   }
