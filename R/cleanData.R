@@ -13,11 +13,18 @@ cleanData <- function(xdata, ydata, mode = 0,
 
   # make sure in same order
   y_correct_order <- match(rownames(xdata), rownames(ydata))
-  ydata <- ydata[y_correct_order]
 
-  # fix ydata rownames
-  ydata <- as.matrix(ydata)
-  rownames(ydata) <- rownames(xdata)
+  # we may not have labeled y values, if not just print a message
+  if (!is.na(y_correct_order)) {
+    ydata <- ydata[y_correct_order]
+    # fix ydata rownames
+    ydata <- as.matrix(ydata)
+    rownames(ydata) <- rownames(xdata)
+
+  } else {
+    cat("Y does not have labels. Assuming Y and X have rows in the same order")
+  }
+
 
   # remove zero SD too
   zero_sd <- which(apply(xdata, 2, sd) == 0)
