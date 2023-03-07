@@ -4,7 +4,7 @@ cleanData <- function(xdata, ydata, mode = 0,
                       remove_zero_median_rows = F,
                       er_input = NULL) {
 
-  if (any(!is.null(er_input))) {
+  if (!is.null(er_input)) {
     mode = er_input$mode
     quantile_filter = ifelse(is.null(er_input$quantile_filter), 0.0, er_input$quantile_filter)
     remove_zero_median_cols = ifelse(is.null(er_input$remove_zero_median_cols), F, er_input$remove_zero_median_cols)
@@ -15,7 +15,7 @@ cleanData <- function(xdata, ydata, mode = 0,
   y_correct_order <- match(rownames(xdata), rownames(ydata))
 
   # we may not have labeled y values, if not just print a message
-  if (!is.na(y_correct_order)) {
+  if (any(!is.na(y_correct_order))) {
     ydata <- ydata[y_correct_order]
     # fix ydata rownames
     ydata <- as.matrix(ydata)
