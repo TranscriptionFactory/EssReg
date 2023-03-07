@@ -50,21 +50,13 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   #################################################################
   zero_in <- TRUE
   while (zero_in) {
-    ## first part is partition()
-    total_num <- nrow(x)
-    num_group <- k
-    remainder <- total_num %% num_group # get the remainder
-    num_per_group <- total_num %/% num_group
-    partition <- rep(num_per_group, num_group) + c(rep(1, remainder), rep(0, num_group - remainder))
-    ## second part is extract()
-    pre_vec <- sample(1:nrow(x))
-    extract <- vector("list", length(partition))
-    extract[[1]] <- pre_vec[1:partition[1]]
-    for (i in 2:length(partition)) {
-      temp_ind <- sum(partition[1:(i - 1)]) + 1
-      extract[[i]] <- pre_vec[temp_ind:(temp_ind + partition[i] - 1)]
+
+    if (y_factor) {
+      group_inds <- caret::createFolds(factor(y), k = k, list = TRUE)
+    } else {
+      group_inds <- caret::createFolds(y, k = k, list = TRUE)
     }
-    group_inds <- extract
+
 
     y_groups_val <- NULL
     y_groups_train <- NULL
@@ -281,7 +273,16 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         res <- stats::glm(as.numeric(as.character(use_y_train)) ~ ., data = as.data.frame(train_pcs), family = "binomial") ## make model
         pred_vals <- predict(res, newdata = as.data.frame(valid_pcs), type = "response") ## predict validation set values
       } else { ## lasso for comparison
-          if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
+        if ((nrow(train_x_std) / 5 < 3)) { ## sample size < 15
+          cat("\n using LOOCV for cv.glmnet \n")
+          res <- glmnet::cv.glmnet(train_x_std,
+                                   use_y_train,
+                                   alpha = 1,
+                                   nfolds = nrow(train_x_std),
+                                   standardize = F,
+                                   grouped = F,
+                                   family = lasso_fam)
+        } else if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
