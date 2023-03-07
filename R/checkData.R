@@ -1,32 +1,23 @@
 
 # usage: result = checkData(yaml_path). Filtered data can be found with result$new_x
 #' @export
-checkData = function(yaml_path = NULL, x_input = NULL, y_input = NULL) {
+checkData <- function(x_input = NULL, y_input = NULL) {
 
-  if ( !is.null(yaml_path) ) {
-    er_input = yaml::yaml.load_file(yaml_path)
-    x = as.matrix(read.csv(er_input$x_path, row.names = 1))
-    y = as.matrix(read.csv(er_input$y_path, row.names = 1))
-  } else if ( !is.null(x_input) & !is.null(y_input) ) {
-    x = as.matrix(x_input)
-    y = as.matrix(y_input)
-  } else {
-    cat("check input \n")
-    return()
-  }
+  x <- as.matrix(x_input)
+  y <- as.matrix(y_input)
 
-  error_messages = list()
-  fixed_data = list("x" = x, "y" = y)
+  error_messages <- list()
+  fixed_data <- list("x" = x, "y" = y)
 
   # check for incorrectly ordered x and y
-  y_correct_order = match(rownames(x), rownames(y))
+  y_correct_order <- match(rownames(x), rownames(y))
   new_y = as.matrix(y[y_correct_order])
-  rownames(new_y) = rownames(x)
+  rownames(new_y) <- rownames(x)
 
   if (all(rownames(new_y) != rownames(y))) {
-    error_messages = append(error_messages, "x and y need to have rownames in the same order \n")
-    fixed_data$new_y = new_y
-    fixed_data$new_x = x
+    error_messages <- append(error_messages, "x and y need to have rownames in the same order \n")
+    fixed_data$new_y <- new_y
+    fixed_data$new_x <- x
   }
 
   # check x and y dimensions
@@ -36,22 +27,22 @@ checkData = function(yaml_path = NULL, x_input = NULL, y_input = NULL) {
 
   # check x and y for NA values
   if (anyNA(x)) {
-    error_messages = append(error_messages, "x data has NA values \n")
+    error_messages <- append(error_messages, "x data has NA values \n")
   }
   if (anyNA(y)) {
-    error_messages = append(error_messages, "y has NA values \n")
+    error_messages <- append(error_messages, "y has NA values \n")
   }
 
   # check for NA values in centered/scaled x
   if (anyNA(scale(x, T, T))) {
-    zero_cols = which(apply(x, 2, std) == 0)
+    zero_cols <- which(apply(x, 2, std) == 0)
 
-    error_messages = append(error_messages,
+    error_messages <- append(error_messages,
                             cat("columns have features with zero standard deviation: ",
                                 zero_cols, "\n"))
 
-    filtered_x = x[, -zero_cols]
-    fixed_data$new_x = filtered_x
+    filtered_x <- x[, -zero_cols]
+    fixed_data$new_x <- filtered_x
   }
 
   if (length(error_messages) == 0) {

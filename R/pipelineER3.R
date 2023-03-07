@@ -16,6 +16,13 @@ pipelineER3 <- function(yaml_path) {
   er_input <- yaml::yaml.load_file(yaml_path)
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1)) ## not standardized
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1)) ## not standardized
+
+  if (!is.null(er_input$mode)) {
+    cleaned_data = cleanData(xdata = x, ydata = y, er_input = er_input)
+    x = cleaned_data$x
+    y = cleaned_data$y
+  }
+
   x_std <- scale(x, T, T)
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
