@@ -1,7 +1,8 @@
 #' @export
 cleanData <- function(xdata, ydata, mode = 0,
                       quantile_filter = 0.01, remove_zero_median_cols = T,
-                      remove_zero_median_rows = T, scale_zeroes_directly = 0.0001) {
+                      remove_zero_median_rows = T, scale_zeroes_directly = 0.0001,
+                     er_input = NULL) {
 #   if ( !is.null(xdata)) {
 
 #     res = tryCatch({
