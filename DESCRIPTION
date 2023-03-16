@@ -9,7 +9,7 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Imports:
     cluster,
-    doParallel,
+    doFuture,
     dplyr,
     foreach,
     ggplot2,
