@@ -111,11 +111,15 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     }
   }
 
+  permuted_methods = c()
   if (permute) {
+    permuted_methods = c(permuted_methods, paste0(methods, "_y"))
     methods <- c(methods, paste0(methods, "_y"))
   }
 
   results <- NULL
+  lasso_var_names = c()
+
   ##---------------------------------------------------------------
   ##                  starting cross validation                  --
   ##---------------------------------------------------------------
@@ -165,7 +169,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       valid_y_labs <- factor(valid_y_raw, levels = y_levels)
     }
     #cat("permuted y: ", train_y_labs_perm, "\n")
-
     ##----------------------------------------------------------------
     ##                   loop through all methods                   --
     ##----------------------------------------------------------------
@@ -305,6 +308,8 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
           lasso_valid <- as.data.frame(t(valid_x_std[, sub_beta_hat]))
         }
         colnames(lasso_train) <- colnames(lasso_valid) <- paste0("X", sub_beta_hat)
+        
+        lasso_var_names = c(lasso_var_names, colnames(lasso_valid))
         if (y_factor) {
           lasso_lm <- stats::glm(use_y_train ~ ., data = lasso_train, family = lasso_fam)
         } else {
@@ -375,5 +380,5 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   combined_res$each_fold <- results
   combined_res$final_corr <- final_results
   saveRDS(combined_res, file = paste0(new_dir, "results.rds"))
-  return (final_results)
+  return (list("final_results" = final_results, "lasso_var_names" = lasso_var_names))
 }
