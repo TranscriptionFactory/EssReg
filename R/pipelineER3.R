@@ -68,6 +68,8 @@ pipelineER3 <- function(yaml_path) {
   } -> lambda_rep
   saveRDS(lambda_rep, paste0(er_input$out_path, "pipeline_step5.rds"))
 
+  # replace lambda rep
+  lambda_rep = lambda_rep$final_results
   ## create boxplot of replicate correlations ##################################
   if (er_input$eval_type == "auc") {
     methods <- c("plainER", "plainER_y", "lasso", "lasso_y", "pclr", "pclr_y", "plsda", "plsda_y")
