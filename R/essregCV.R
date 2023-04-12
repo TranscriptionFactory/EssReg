@@ -380,5 +380,9 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   combined_res$each_fold <- results
   combined_res$final_corr <- final_results
   saveRDS(combined_res, file = paste0(new_dir, "results.rds"))
-  return (list("final_results" = final_results, "lasso_var_names" = list(lasso_var_names)))
+  
+  ret_results = list()
+  ret_results[[1]] = final_results
+  ret_results[[2]] = lasso_var_names
+  return (ret_results)
 }
