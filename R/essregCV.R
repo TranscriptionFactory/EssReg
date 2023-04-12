@@ -307,9 +307,12 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         if (dim(lasso_valid)[[2]] ==1 ){
           lasso_valid <- as.data.frame(t(valid_x_std[, sub_beta_hat]))
         }
+        
+        
+        lasso_var_names = c(lasso_var_names, colnames(train_x_std)[sub_beta_hat])
+
         colnames(lasso_train) <- colnames(lasso_valid) <- paste0("X", sub_beta_hat)
         
-        lasso_var_names = c(lasso_var_names, colnames(lasso_valid))
         if (y_factor) {
           lasso_lm <- stats::glm(use_y_train ~ ., data = lasso_train, family = lasso_fam)
         } else {
@@ -380,9 +383,19 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   combined_res$each_fold <- results
   combined_res$final_corr <- final_results
   saveRDS(combined_res, file = paste0(new_dir, "results.rds"))
+
+  # save results in lasso_results.RDS
+  lasso_file_name = paste0(out_path, 'lasso_results.RDS')
   
-  ret_results = list()
-  ret_results[[1]] = data.frame(final_results)
-  ret_results[[2]] = data.frame(lasso_var_names)
-  return (ret_results)
+  if (file.exists(lasso_file_name)) {
+    lasso_vars_df = readRDS(lasso_file_name)
+    lasso_vars_df = rbind.data.frame(lasso_vars_df, lasso_var_names)
+    saveRDS(lasso_vars_df, lasso_file_name)
+    
+  } else {
+    # save as new df
+    saveRDS(data.frame(lasso_var_names), lasso_file_name)
+  }
+  
+  return (final_results)
 }
