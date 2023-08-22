@@ -274,11 +274,12 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         res <- stats::glm(as.numeric(as.character(use_y_train)) ~ ., data = as.data.frame(train_pcs), family = "binomial") ## make model
         pred_vals <- predict(res, newdata = as.data.frame(valid_pcs), type = "response") ## predict validation set values
       } else { ## lasso for comparison
-          if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
+          #if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
+          if (k == nrow(x)) { #LOOCV
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
-                                     nfolds = 5,
+                                     nfolds = nrow(train_x_std),
                                      standardize = F,
                                      grouped = F,
                                      family = lasso_fam)
@@ -286,7 +287,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
-                                     nfolds = 10,
+                                     nfolds = 5,
                                      standardize = F,
                                      grouped = F,
                                    family = lasso_fam)
