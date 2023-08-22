@@ -296,6 +296,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         beta_hat <- coef(res, s = res$lambda.min)[-1]
         sub_beta_hat <- which(beta_hat != 0)
 
+        cat("\n finished cv.glmnet\n")
         ## if lasso selects no variable, randomly pick 5 features instead
         if (length(sub_beta_hat) == 0) {
           cat("Lasso selects no features - Randomly selecting 5 features. . . \n")
