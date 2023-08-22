@@ -277,13 +277,12 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
           #if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
           if (k == nrow(x)) { #LOOCV
             cat("\n using LOOCV for lasso\n")
-
-            cv_y = ifelse(y_factor, factor(use_y_train), use_y_train)
             res <- glmnet::cv.glmnet(train_x_std,
-                                     y = cv_y,
+                                     y = use_y_train,
                                      alpha = 1,
-                                     nfolds = nrow(train_x_std) - 1,
+                                     nfolds = nrow(train_x_std),
                                      standardize = F,
+                                     type.measure = "class",
                                      grouped = F,
                                      family = lasso_fam)
           } else {
