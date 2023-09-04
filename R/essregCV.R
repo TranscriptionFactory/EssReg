@@ -278,14 +278,23 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
           if (k == nrow(x)) { #LOOCV
             cat("\n using LOOCV for lasso\n")
             cat("\ny-values are", use_y_train, "\n")
-            res <- glmnet::cv.glmnet(train_x_std,
-                                     y = as.factor(use_y_train),
-                                     alpha = 1,
-                                     nfolds = nrow(train_x_std),
-                                     standardize = F,
-                                     type.measure = "class",
-                                     grouped = F,
-                                     family = lasso_fam)
+
+            # check if we're going to have a problem with cv.glmnet
+            if (min(table(as.factor(use_y_train))) <= 1) {
+              # we will have an error, so don't do cross val in glmnet
+              cat("\ncan't do cv.glmnet, trying glmnet instead\n")
+              res = glmnet::glmnet(x = train_x_std, y = use_y_train,
+                                   family = lasso_fam, alpha = 1)
+            } else {
+              res <- glmnet::cv.glmnet(train_x_std,
+                                       y = as.factor(use_y_train),
+                                       alpha = 1,
+                                       nfolds = nrow(train_x_std),
+                                       standardize = F,
+                                       type.measure = "class",
+                                       grouped = F,
+                                       family = lasso_fam)
+              }
           } else {
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
