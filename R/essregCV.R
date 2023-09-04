@@ -203,7 +203,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         
         cat("\n length y = ", length(use_y_train_ER),
             "\n length std_y = ", length(std_y),
-            "\n nrow x = " nrow(train_x_std),
+            "\n nrow x = ", nrow(train_x_std),
             "\n nrow x_std = ", nrow(train_x_std), "\n")
         res <- plainER(y = use_y_train_ER,
                        x = train_x_raw,
