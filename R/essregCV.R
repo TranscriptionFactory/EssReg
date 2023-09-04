@@ -284,7 +284,8 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
               # we will have an error, so don't do cross val in glmnet
               cat("\ncan't do cv.glmnet, trying glmnet instead\n")
               res = glmnet::glmnet(x = train_x_std, y = use_y_train,
-                                   family = lasso_fam, alpha = 1)
+                                   family = lasso_fam, alpha = 1,
+                                  standardize = F)
 
               # in lieu of refactoring this entire thing, we are just going
               # to add our lambda value to the res list
