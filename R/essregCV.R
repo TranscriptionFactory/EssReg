@@ -280,7 +280,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
             cat("\ny-values are", use_y_train, "\n")
 
             # check if we're going to have a problem with cv.glmnet
-            if (min(table(as.factor(use_y_train))) <= 1) {
+            if (min(table(as.factor(use_y_train))) <= 2) {
               # we will have an error, so don't do cross val in glmnet
               cat("\ncan't do cv.glmnet, trying glmnet instead\n")
               res = glmnet::glmnet(x = train_x_std, y = use_y_train,
