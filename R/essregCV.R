@@ -210,6 +210,8 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                        thresh_fdr = thresh_fdr,
                        rep_cv = rep_cv,
                        alpha_level = alpha_level)
+        
+        cat("\n complete plainER run\n")
         if (is.null(res)) {
           return (NULL)
         }
