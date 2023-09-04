@@ -285,6 +285,10 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
               cat("\ncan't do cv.glmnet, trying glmnet instead\n")
               res = glmnet::glmnet(x = train_x_std, y = use_y_train,
                                    family = lasso_fam, alpha = 1)
+
+              # in lieu of refactoring this entire thing, we are just going
+              # to add our lambda value to the res list
+              res$lambda.min = res$lambda
             } else {
               res <- glmnet::cv.glmnet(train_x_std,
                                        y = as.factor(use_y_train),
