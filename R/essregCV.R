@@ -299,7 +299,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                                        alpha = 1,
                                        nfolds = nrow(train_x_std),
                                        standardize = F,
-                                       type.measure = "class",
+                                       # type.measure = "class",
                                        grouped = F,
                                        family = lasso_fam)
               }
