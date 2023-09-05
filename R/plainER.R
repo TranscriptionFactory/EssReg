@@ -171,7 +171,7 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
   cat("\n starting Gamma hat at 173\n")
 
   cat("\n gamma hat values are\n",
-      "I_hat = ", I_hat,
+      "I_hat = ", length(I_hat),
       "\n C_hat = ", dim(C_hat),
       "\n A_hat = ", dim(A_hat), "\n")
   Gamma_hat[-I_hat] <- diag(sigma[-I_hat, -I_hat]) - diag(A_hat[-I_hat,] %*% C_hat %*% t(A_hat[-I_hat, ]))
