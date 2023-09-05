@@ -173,6 +173,8 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
   Gamma_hat[-I_hat] <- diag(sigma[-I_hat, -I_hat]) - diag(A_hat[-I_hat,] %*% C_hat %*% t(A_hat[-I_hat, ]))
   Gamma_hat[Gamma_hat < 0] <- 1e2 #### replace negative values with 100
   #### use standardized x and y
+  cat("\n calling estBeta \n")
+
   res_beta <- estBeta(y = y, x = x, sigma = sigma, A_hat = A_hat,
                       C_hat = C_hat, Gamma_hat = Gamma_hat, I_hat = I_hat,
                       I_hat_list = I_hat_list, alpha_level = alpha_level)
