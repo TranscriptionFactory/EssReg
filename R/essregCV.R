@@ -116,6 +116,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     methods <- c(methods, paste0(methods, "_y"))
   }
 
+  input_vars = list()
   results <- NULL
   ##---------------------------------------------------------------
   ##                  starting cross validation                  --
@@ -166,6 +167,10 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       valid_y_labs <- factor(valid_y_raw, levels = y_levels)
     }
     #cat("permuted y: ", train_y_labs_perm, "\n")
+
+    input_vars[[k]] = list(train_x_std = train_x_std, valid_x_std = valid_x_std, train_y = train_y, valid_y = valid_y)
+    saveRDS(list(results_df = results, input_vars = input_vars), paste0(out_path, "tracking_essregcv.RDS"))
+    
 
     ##----------------------------------------------------------------
     ##                   loop through all methods                   --
