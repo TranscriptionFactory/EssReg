@@ -168,7 +168,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     }
     #cat("permuted y: ", train_y_labs_perm, "\n")
 
-    input_vars[[k]] = list(train_x_std = train_x_std, valid_x_std = valid_x_std, train_y = train_y, valid_y = valid_y)
+    input_vars[[i]] = list(train_x_std = train_x_std, valid_x_std = valid_x_std, train_y = train_y, valid_y = valid_y)
     saveRDS(list(results_df = results, input_vars = input_vars), paste0(out_path, "tracking_essregcv.RDS"))
     
 
