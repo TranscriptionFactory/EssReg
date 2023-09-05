@@ -200,11 +200,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       ##  plainER   -
       ##-------------
       if (grepl(x = method_j, pattern = "plainER", fixed = TRUE)) { ## plain essential regression, predict with all Zs
-        
-        cat("\n length y = ", length(use_y_train_ER),
-            "\n length std_y = ", length(std_y),
-            "\n nrow x = ", nrow(train_x_std),
-            "\n nrow x_std = ", nrow(train_x_std), "\n")
+      
         res <- plainER(y = use_y_train_ER,
                        x = train_x_raw,
                        x_std = train_x_std,
@@ -284,8 +280,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
           #if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
           if (k == nrow(x)) { #LOOCV
             cat("\n using LOOCV for lasso\n")
-            cat("\ny-values are", use_y_train, "\n")
-
+            
             # check if we're going to have a problem with cv.glmnet
             if (min(table(as.factor(use_y_train))) <= 2) {
               # we will have an error, so don't do cross val in glmnet
@@ -317,14 +312,9 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                                      grouped = F,
                                    family = lasso_fam)
         }
-        # cat("\ncoef length = ", length(coef(res, s = res$lambda.min)), "\n")
-        # if (length(coef(res, s = res$lambda.min)) <= 1) {
-        #   cat("\nsetting sub_beta_hat = 0\n")
-        #   sub_beta_hat = 0
-        # } else {
+
         beta_hat <- coef(res, s = res$lambda.min)[-1]
         sub_beta_hat <- which(beta_hat != 0)
-        # }
 
         cat("\n finished cv.glmnet\n")
         ## if lasso selects no variable, randomly pick 5 features instead
