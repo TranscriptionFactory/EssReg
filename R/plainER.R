@@ -109,15 +109,12 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
     stop()
   }
 
-  cat("\n starting estC\n")
   C_hat <- estC(sigma = sigma, AI = A_hat)
 
   #### ER Supplement (2.1)
   #### Gamma_hat_{ii} = Sigma_hat_{ii} - A_hat_{i.}^T Sigma_hat_{Z} A_hat_{i.} for i in I_hat
   #### Gamma_hat_{ji} = 0 for all j ≠ i
   
-  cat("\n starting supp 2.1\n")
-
   Gamma_hat <- rep(0, p)
   Gamma_hat[I_hat] <- diag(sigma[I_hat, I_hat]) - diag(A_hat[I_hat, ] %*% C_hat %*% t(A_hat[I_hat, ]))
   Gamma_hat[Gamma_hat < 0] <- 1e-2 #### replace negative values with something very close to 0
@@ -132,14 +129,10 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
   #### Inference In Latent Factor Regression With Clusterable Features
   #### Z_tilde = Q*X
 
-  cat("\n starting supp 2.2\n")
-
   Q <- try(theta_hat %*% solve(crossprod(x %*% theta_hat) / n, crossprod(theta_hat)), silent = T)
   if (class(Q)[1] == "try-error") {
     Q <- theta_hat %*% MASS::ginv(crossprod(x %*% theta_hat) / n) %*% crossprod(theta_hat)
   }
-
-  cat("\n starting estB\n")
 
   #### Beta Estimation
   if (length(result_AI$pure_vec) != nrow(sigma)) { ## check if all vars are pure vars?
@@ -168,17 +161,11 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
     }
     A_hat[-result_AI$pure_vec, ] <- AJ
   }
-  cat("\n starting Gamma hat at 173\n")
 
-  cat("\n gamma hat values are\n",
-      "I_hat = ", length(I_hat),
-      "\n C_hat = ", dim(C_hat),
-      "\n A_hat = ", dim(A_hat), "\n")
   Gamma_hat[-I_hat] <- diag(sigma[-I_hat, -I_hat]) - diag(A_hat[-I_hat,] %*% C_hat %*% t(A_hat[-I_hat, ]))
   Gamma_hat[Gamma_hat < 0] <- 1e2 #### replace negative values with 100
   #### use standardized x and y
-  cat("\n calling estBeta \n")
-
+  
   res_beta <- estBeta(y = y, x = x, sigma = sigma, A_hat = A_hat,
                       C_hat = C_hat, Gamma_hat = Gamma_hat, I_hat = I_hat,
                       I_hat_list = I_hat_list, alpha_level = alpha_level)
