@@ -16,15 +16,31 @@ pipelineER3 <- function(yaml_path) {
   er_input <- yaml::yaml.load_file(yaml_path)
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1)) ## not standardized
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1)) ## not standardized
+
+  if (!is.null(er_input$mode)) {
+    cleaned_data = cleanData(xdata = x, ydata = y, er_input = er_input)
+    x = cleaned_data$x
+    y = cleaned_data$y
+  }
+
   x_std <- scale(x, T, T)
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
+
+  ## clean step
+  cleanedData <- cleanData(x, y)
+  x <- cleanedData$x
+  y <- cleanedData$y
 
   if (er_input$y_factor) {
     y <- toCont(y, er_input$y_levels)
     saveRDS(y, file = paste0(er_input$out_path, "pipeline3_y_mapping.rds"))
     orig_y <- y$cat_y
     y <- y$cont_y
+  }
+
+  if (er_input$k <= 0) {
+    er_input$k <- length(y) #LOOCV
   }
 
   ##  Step 5: K-Fold Cross-Validation With Optimal Delta and Lambda  ###########
@@ -75,7 +91,7 @@ pipelineER3 <- function(yaml_path) {
                                                    y = corr,
                                                    fill = method_perm,
                                                    alpha = alpha)) +
-      ggplot2::geom_violin() +
+      ggplot2::geom_boxplot() +
       ggplot2::labs(fill = "Method") +
       ggplot2::scale_alpha(guide = 'none')
   } else {
@@ -84,7 +100,7 @@ pipelineER3 <- function(yaml_path) {
                                                    y = auc,
                                                    fill = method_perm,
                                                    alpha = alpha)) +
-      ggplot2::geom_violin() +
+      ggplot2::geom_boxplot() +
       ggplot2::labs(fill = "Method") +
       ggplot2::scale_alpha(guide = 'none')
   }

@@ -50,12 +50,10 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   #################################################################
   zero_in <- TRUE
   while (zero_in) {
-    
+
     if (y_factor) {
-      # create balanced folds based on classes
       group_inds <- caret::createFolds(factor(y), k = k, list = TRUE)
     } else {
-      # create folds
       group_inds <- caret::createFolds(y, k = k, list = TRUE)
     }
 
