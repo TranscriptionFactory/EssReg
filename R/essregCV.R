@@ -116,7 +116,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     methods <- c(methods, paste0(methods, "_y"))
   }
 
-  input_vars = list()
   results <- NULL
   ##---------------------------------------------------------------
   ##                  starting cross validation                  --
@@ -166,11 +165,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       train_y_labs_perm <- factor(train_y_perm_raw, levels = y_levels)
       valid_y_labs <- factor(valid_y_raw, levels = y_levels)
     }
-    #cat("permuted y: ", train_y_labs_perm, "\n")
-
-    input_vars[[i]] = list(train_x_std = train_x_std, valid_x_std = valid_x_std, train_y = train_y, valid_y = valid_y)
-    saveRDS(list(results_df = results, input_vars = input_vars), paste0(out_path, "tracking_essregcv.RDS"))
-    
 
     ##----------------------------------------------------------------
     ##                   loop through all methods                   --
@@ -217,7 +211,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                        rep_cv = rep_cv,
                        alpha_level = alpha_level)
         
-        cat("\n complete plainER run\n")
         if (is.null(res)) {
           return (NULL)
         }
@@ -321,7 +314,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         beta_hat <- coef(res, s = res$lambda.min)[-1]
         sub_beta_hat <- which(beta_hat != 0)
 
-        cat("\n finished cv.glmnet\n")
         ## if lasso selects no variable, randomly pick 5 features instead
         if (length(sub_beta_hat) == 0) {
           cat("Lasso selects no features - Randomly selecting 5 features. . . \n")
@@ -404,6 +396,5 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   combined_res$each_fold <- results
   combined_res$final_corr <- final_results
   saveRDS(combined_res, file = paste0(new_dir, "results.rds"))
-  cat("\n finished essregcv \n")
   return (final_results)
 }
