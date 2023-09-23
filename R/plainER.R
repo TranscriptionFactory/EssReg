@@ -114,6 +114,7 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
   #### ER Supplement (2.1)
   #### Gamma_hat_{ii} = Sigma_hat_{ii} - A_hat_{i.}^T Sigma_hat_{Z} A_hat_{i.} for i in I_hat
   #### Gamma_hat_{ji} = 0 for all j ≠ i
+  
   Gamma_hat <- rep(0, p)
   Gamma_hat[I_hat] <- diag(sigma[I_hat, I_hat]) - diag(A_hat[I_hat, ] %*% C_hat %*% t(A_hat[I_hat, ]))
   Gamma_hat[Gamma_hat < 0] <- 1e-2 #### replace negative values with something very close to 0
@@ -127,6 +128,7 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
   theta_hat <- pred_result$theta_hat
   #### Inference In Latent Factor Regression With Clusterable Features
   #### Z_tilde = Q*X
+
   Q <- try(theta_hat %*% solve(crossprod(x %*% theta_hat) / n, crossprod(theta_hat)), silent = T)
   if (class(Q)[1] == "try-error") {
     Q <- theta_hat %*% MASS::ginv(crossprod(x %*% theta_hat) / n) %*% crossprod(theta_hat)
@@ -163,6 +165,7 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
   Gamma_hat[-I_hat] <- diag(sigma[-I_hat, -I_hat]) - diag(A_hat[-I_hat,] %*% C_hat %*% t(A_hat[-I_hat, ]))
   Gamma_hat[Gamma_hat < 0] <- 1e2 #### replace negative values with 100
   #### use standardized x and y
+  
   res_beta <- estBeta(y = y, x = x, sigma = sigma, A_hat = A_hat,
                       C_hat = C_hat, Gamma_hat = Gamma_hat, I_hat = I_hat,
                       I_hat_list = I_hat_list, alpha_level = alpha_level)

@@ -164,7 +164,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       train_y_labs_perm <- factor(train_y_perm_raw, levels = y_levels)
       valid_y_labs <- factor(valid_y_raw, levels = y_levels)
     }
-    #cat("permuted y: ", train_y_labs_perm, "\n")
 
     ##----------------------------------------------------------------
     ##                   loop through all methods                   --
@@ -199,6 +198,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       ##  plainER   -
       ##-------------
       if (grepl(x = method_j, pattern = "plainER", fixed = TRUE)) { ## plain essential regression, predict with all Zs
+      
         res <- plainER(y = use_y_train_ER,
                        x = train_x_raw,
                        x_std = train_x_std,
@@ -209,6 +209,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                        thresh_fdr = thresh_fdr,
                        rep_cv = rep_cv,
                        alpha_level = alpha_level)
+        
         if (is.null(res)) {
           return (NULL)
         }
@@ -273,23 +274,42 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         res <- stats::glm(as.numeric(as.character(use_y_train)) ~ ., data = as.data.frame(train_pcs), family = "binomial") ## make model
         pred_vals <- predict(res, newdata = as.data.frame(valid_pcs), type = "response") ## predict validation set values
       } else { ## lasso for comparison
-          if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
+          #if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
+          if (k == nrow(x)) { #LOOCV
+            cat("\n using LOOCV for lasso\n")
+            
+            # check if we're going to have a problem with cv.glmnet
+            if (min(table(as.factor(use_y_train))) <= 2) {
+              # we will have an error, so don't do cross val in glmnet
+              cat("\ncan't do cv.glmnet, trying glmnet instead\n")
+              res = glmnet::glmnet(x = train_x_std, y = use_y_train,
+                                   family = lasso_fam, alpha = 1,
+                                   lambda = 1,
+                                  standardize = F)
+
+              # in lieu of refactoring this entire thing, we are just going
+              # to add our lambda value to the res list
+              res$lambda.min = res$lambda
+            } else {
+              res <- glmnet::cv.glmnet(train_x_std,
+                                       y = as.factor(use_y_train),
+                                       alpha = 1,
+                                       nfolds = nrow(train_x_std),
+                                       standardize = F,
+                                       # type.measure = "class",
+                                       grouped = F,
+                                       family = lasso_fam)
+              }
+          } else {
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
                                      nfolds = 5,
                                      standardize = F,
                                      grouped = F,
-                                     family = lasso_fam)
-          } else {
-            res <- glmnet::cv.glmnet(train_x_std,
-                                     use_y_train,
-                                     alpha = 1,
-                                     nfolds = 10,
-                                     standardize = F,
-                                     grouped = F,
                                    family = lasso_fam)
         }
+
         beta_hat <- coef(res, s = res$lambda.min)[-1]
         sub_beta_hat <- which(beta_hat != 0)
 
