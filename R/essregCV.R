@@ -318,7 +318,10 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         ## if lasso selects no variable, randomly pick 5 features instead
         if (length(sub_beta_hat) == 0) {
           cat("Lasso selects no features - Randomly selecting 5 features. . . \n")
-          sub_beta_hat <- sample(1:ncol(train_x_std), 5)
+
+          sub_beta_hat <- ifelse(ncol(train_x_std) > 5, sample(1:ncol(train_x_std), 5), sample(1:ncol(train_x_std)))
+
+          # sub_beta_hat <- sample(1:ncol(train_x_std), 5)
         }
         ## predict and standardize - use linear model rather than glmnet object
         lasso_train <- as.data.frame(train_x_std[, sub_beta_hat])
