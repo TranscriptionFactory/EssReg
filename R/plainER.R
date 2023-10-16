@@ -84,12 +84,19 @@ plainER <- function(y, x, x_std, std_y, sigma = NULL, delta, thresh_fdr = 0.2, l
   #### of CV_Delta and select median of replicates
   #### use the unstandardized version of x (if available) to avoid signal leakage in CV
   if (length(delta_scaled) > 1) {
-    foreach::foreach(i = 1:rep_cv, .combine = c) %dopar% {
-      cvDelta(raw_x = raw_x,
+    cv_delta_reps = c()
+    for(i in 1:rep_cv) {
+      cv_delta_reps = c(cv_delta_reps, cvDelta(raw_x = raw_x,
               fdr_entries = kept_entries,
-              deltas_scaled = delta_scaled)
-    } -> cv_delta_reps
+              deltas_scaled = delta_scaled))
+    }
     opt_delta <- stats::median(cv_delta_reps)
+    # foreach::foreach(i = 1:rep_cv, .combine = c) %dopar% {
+    #   cvDelta(raw_x = raw_x,
+    #           fdr_entries = kept_entries,
+    #           deltas_scaled = delta_scaled)
+    # } -> cv_delta_reps
+    # opt_delta <- stats::median(cv_delta_reps)
   } else {
     opt_delta <- delta_scaled
   }
