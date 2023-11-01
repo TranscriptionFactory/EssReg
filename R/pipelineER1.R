@@ -45,7 +45,8 @@ pipelineER1 <- function(yaml_path, steps = "all") {
   if (file.exists(paste0(er_input$out_path, "pipeline_step1.rds"))) {
     coarse_res <- readRDS(paste0(er_input$out_path, "pipeline_step1.rds"))
   } else {
-    foreach::foreach (i = 1:length(deltas)) %dopar% {
+    coarse_res = list()
+    for (i in 1:length(deltas)) {
       cat(i, "\n")
       result <- plainER(y = y,
                         x = x, # x here is NOT z_scored x
@@ -62,8 +63,8 @@ pipelineER1 <- function(yaml_path, steps = "all") {
         cat("plainER failed --- infeasible linear program \n")
         return ()
       }
-      result
-    } -> coarse_res
+      coarse_res[[length(coarse_res) + 1]] = result
+    }
     saveRDS(coarse_res, file = paste0(er_input$out_path, "pipeline_step1.rds"))
   }
 

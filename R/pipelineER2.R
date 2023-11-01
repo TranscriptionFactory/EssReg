@@ -85,7 +85,8 @@ pipelineER2 <- function(yaml_path, steps = "all") {
       if (file.exists(paste0(er_input$out_path, "essregCV_lambda_", lambda, ".rds"))) {
         lambda_rep <- readRDS(paste0(er_input$out_path, "essregCV_lambda_", lambda, ".rds"))
       } else {
-        foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
+        lambda_rep = data.frame()
+        for (j in 1:er_input$nreps) {
           if (file.exists(file = paste0(out_path, "replicate", j, "/output_table.rds"))) {
             readRDS(paste0(out_path, "replicate", j, "/output_table.rds"))
           } else {
@@ -108,9 +109,35 @@ pipelineER2 <- function(yaml_path, steps = "all") {
                                  rep = j,
                                  benchmark = er_input$benchmark)
             }
-            result
+            lambda_rep = rbind(lambda_rep, result)
           }
-        } -> lambda_rep
+        }
+        # foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
+        #   if (file.exists(file = paste0(out_path, "replicate", j, "/output_table.rds"))) {
+        #     readRDS(paste0(out_path, "replicate", j, "/output_table.rds"))
+        #   } else {
+        #     result <- NULL
+        #     while (is.null(result)) {
+        #       result <- essregCV(k = er_input$k,
+        #                          x = x,
+        #                          y = y,
+        #                          std_y = er_input$std_y,
+        #                          std_cv = er_input$std_cv,
+        #                          delta = best_delta,
+        #                          permute = er_input$permute,
+        #                          eval_type = er_input$eval_type,
+        #                          y_levels = er_input$y_levels,
+        #                          lambda = lambda,
+        #                          out_path = paste0(er_input$out_path, "lambda_", lambda, "/"),
+        #                          rep_cv = er_input$rep_cv,
+        #                          alpha_level = er_input$alpha_level,
+        #                          thresh_fdr = er_input$thresh_fdr,
+        #                          rep = j,
+        #                          benchmark = er_input$benchmark)
+        #     }
+        #     result
+        #   }
+        # } -> lambda_rep
 
         #saveRDS(lambda_rep, file = paste0(er_input$out_path, "essregCV_lambda_", lambda, ".rds"))
       }
