@@ -105,7 +105,7 @@ pipelineER3 <- function(yaml_path) {
                   perm = as.factor(perm)) %>%
     dplyr::mutate(alpha = ifelse(perm == "no_perm", 1, 0.9))
 
-  pdf_file <- paste0(er_input$out_path, "/opt_delta_lambda_violinplot.pdf")
+  pdf_file <- paste0(er_input$out_path, "/opt_delta_lambda_boxplot.pdf")
   dir.create(file.path(dirname(pdf_file)), showWarnings = F, recursive = T)
 
   if (er_input$eval_type == "corr") {
