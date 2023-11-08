@@ -17,14 +17,11 @@ pipelineER3 <- function(yaml_path) {
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1, check.names = F)) ## not standardized
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1, check.names = F)) ## not standardized
 
+  ## remove any zero sd cols
+  x = x[, which(apply(x, 2, sd) != 0)]
   x_std <- scale(x, T, T)
 
-  dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
-
-  ## clean step
-  cleanedData <- cleanData(x, y)
-  x <- cleanedData$x
-  y <- cleanedData$y
+  dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)  
 
   if (er_input$y_factor) {
     y <- toCont(y, er_input$y_levels)
