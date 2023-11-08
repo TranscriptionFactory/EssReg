@@ -16,9 +16,15 @@ pipelineER3 <- function(yaml_path) {
   er_input <- yaml::yaml.load_file(yaml_path)
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1, check.names = F)) ## not standardized
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1, check.names = F)) ## not standardized
+
   x_std <- scale(x, T, T)
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
+
+  ## clean step
+  cleanedData <- cleanData(x, y)
+  x <- cleanedData$x
+  y <- cleanedData$y
 
   if (er_input$y_factor) {
     y <- toCont(y, er_input$y_levels)
@@ -31,6 +37,10 @@ pipelineER3 <- function(yaml_path) {
   run_lasso = F
   if (!is.null(er_input$lasso) & er_input$lasso) {
     run_lasso = T
+  }
+
+  if (er_input$k <= 0) {
+    er_input$k <- nrow(x) #LOOCV
   }
 
   lambda_rep = data.frame()
@@ -73,7 +83,7 @@ pipelineER3 <- function(yaml_path) {
                   perm = as.factor(perm)) %>%
     dplyr::mutate(alpha = ifelse(perm == "no_perm", 1, 0.9))
 
-  pdf_file <- paste0(er_input$out_path, "/opt_delta_lambda_violinplot.pdf")
+  pdf_file <- paste0(er_input$out_path, "/opt_delta_lambda_boxplot.pdf")
   dir.create(file.path(dirname(pdf_file)), showWarnings = F, recursive = T)
 
   if (er_input$eval_type == "corr") {

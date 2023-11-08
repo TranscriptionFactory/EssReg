@@ -12,6 +12,12 @@ parseRun <- function(yaml_path) {
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1, check.names = F))
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1, check.names = F))
 
+  if (!is.null(er_input$mode)) {
+    cleaned_data = cleanData(xdata = x, ydata = y, er_input = er_input)
+    x = cleaned_data$x
+    y = cleaned_data$y
+  }
+
   x_std <- scale(x, T, T)
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
