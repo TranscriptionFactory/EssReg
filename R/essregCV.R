@@ -200,7 +200,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       ##  plainER   -
       ##-------------
       if (grepl(x = method_j, pattern = "plainER", fixed = TRUE)) { ## plain essential regression, predict with all Zs
-      
+
         res <- plainER(y = use_y_train_ER,
                        x = train_x_raw,
                        x_std = train_x_std,
@@ -211,7 +211,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                        thresh_fdr = thresh_fdr,
                        rep_cv = rep_cv,
                        alpha_level = alpha_level)
-        
+
         if (is.null(res)) {
           return (NULL)
         }
@@ -284,11 +284,10 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                                      standardize = F,
                                      grouped = F,
                                      family = lasso_fam)
-      } else { ## lasso for comparison
           #if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
           if (k == nrow(x)) { #LOOCV
             cat("\n using LOOCV for lasso\n")
-            
+
             # check if we're going to have a problem with cv.glmnet
             if (min(table(as.factor(use_y_train))) <= 2) {
               # we will have an error, so don't do cross val in glmnet
