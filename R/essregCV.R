@@ -20,13 +20,14 @@
 #' @param alpha_level \eqn{\alpha}, a numerical constant used in confidence interval calculation
 #' @param rep an integer indicating the replicate number
 #' @param out_path path for saving output
-#' @param benchmark a boolean flag that decides if running, pcr, pclr, plsr and plsda.
+#' @param benchmark a boolean flag that decides if running lasso, pcr, pclr, plsr and plsda.
+#' @param run_lasso a boolean flag that decides if running lasso for comparison
 #' @return An object of class \sQuote{data.frame}
 #' @export
 
 essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda = 0.1,
                      rep_cv = 50, alpha_level = 0.05, permute = T,y_levels = NULL,
-                     eval_type, out_path, rep, benchmark) {
+                     eval_type, out_path, rep, benchmark = F, run_lasso = F) {
 
   #get raw_x and get scaled x ###########################
   raw_x <- x
@@ -50,7 +51,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   #################################################################
   zero_in <- TRUE
   while (zero_in) {
-    
+
     if (y_factor) {
       # create balanced folds based on classes
       group_inds <- caret::createFolds(factor(y), k = k, list = TRUE)
@@ -101,15 +102,14 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   ##                       Running Methods                       ##
   #################################################################
 
-  ## Decide what methods to run using the nature of the Y.
-  methods <- c("plainER", "lasso")
-
   if (benchmark){
     if (y_factor) {
-      methods <- c(methods, "plsda", "pclr")
+      methods <- c(methods, "lasso", "plsda", "pclr")
     } else {
-      methods <- c(methods, "plsr", "pcr")
+      methods <- c(methods, "lasso", "plsr", "pcr")
     }
+  } else if (run_lasso) {
+    methods <- c(methods, "lasso")
   }
 
   if (permute) {
@@ -273,7 +273,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         valid_pcs <- scale(valid_x_std, princ_comps$center, princ_comps$scale) %*% princ_comps$rotation ## project validation set to PC space
         res <- stats::glm(as.numeric(as.character(use_y_train)) ~ ., data = as.data.frame(train_pcs), family = "binomial") ## make model
         pred_vals <- predict(res, newdata = as.data.frame(valid_pcs), type = "response") ## predict validation set values
-      } else { ## lasso for comparison
+      } else if (grepl(x = method_j, pattern = "lasso", fixed = TRUE)) { ## lasso for comparison
           if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
