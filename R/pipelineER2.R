@@ -18,6 +18,13 @@ pipelineER2 <- function(yaml_path, steps = "all") {
   er_input <- yaml::yaml.load_file(yaml_path)
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1)) ## not standardized
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1)) ## not standardized
+
+  if (!is.null(er_input$mode)) {
+    cleaned_data = cleanData(xdata = x, ydata = y, er_input = er_input)
+    x = cleaned_data$x
+    y = cleaned_data$y
+  }
+
   x_std <- scale(x, T, T)
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
@@ -27,6 +34,12 @@ pipelineER2 <- function(yaml_path, steps = "all") {
     saveRDS(y, file = paste0(er_input$out_path, "pipeline2_y_mapping.rds"))
     orig_y <- y$cat_y
     y <- y$cont_y
+  }
+
+  # check with benchmark methods we're doing
+  run_lasso = F
+  if (!is.null(er_input$lasso) & er_input$lasso) {
+    run_lasso = T
   }
 
   ## Step 3: Fine Delta Search ###############################################
@@ -78,7 +91,8 @@ pipelineER2 <- function(yaml_path, steps = "all") {
       if (file.exists(paste0(er_input$out_path, "essregCV_lambda_", lambda, ".rds"))) {
         lambda_rep <- readRDS(paste0(er_input$out_path, "essregCV_lambda_", lambda, ".rds"))
       } else {
-        foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
+        lambda_rep = data.frame()
+        for (j in 1:er_input$nreps) {
           if (file.exists(file = paste0(out_path, "replicate", j, "/output_table.rds"))) {
             readRDS(paste0(out_path, "replicate", j, "/output_table.rds"))
           } else {
@@ -99,11 +113,38 @@ pipelineER2 <- function(yaml_path, steps = "all") {
                                  alpha_level = er_input$alpha_level,
                                  thresh_fdr = er_input$thresh_fdr,
                                  rep = j,
-                                 benchmark = er_input$benchmark)
+                                 benchmark = er_input$benchmark,
+                                 run_lasso = run_lasso)
             }
-            result
+            lambda_rep = rbind(lambda_rep, result)
           }
-        } -> lambda_rep
+        }
+        # foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
+        #   if (file.exists(file = paste0(out_path, "replicate", j, "/output_table.rds"))) {
+        #     readRDS(paste0(out_path, "replicate", j, "/output_table.rds"))
+        #   } else {
+        #     result <- NULL
+        #     while (is.null(result)) {
+        #       result <- essregCV(k = er_input$k,
+        #                          x = x,
+        #                          y = y,
+        #                          std_y = er_input$std_y,
+        #                          std_cv = er_input$std_cv,
+        #                          delta = best_delta,
+        #                          permute = er_input$permute,
+        #                          eval_type = er_input$eval_type,
+        #                          y_levels = er_input$y_levels,
+        #                          lambda = lambda,
+        #                          out_path = paste0(er_input$out_path, "lambda_", lambda, "/"),
+        #                          rep_cv = er_input$rep_cv,
+        #                          alpha_level = er_input$alpha_level,
+        #                          thresh_fdr = er_input$thresh_fdr,
+        #                          rep = j,
+        #                          benchmark = er_input$benchmark)
+        #     }
+        #     result
+        #   }
+        # } -> lambda_rep
 
         #saveRDS(lambda_rep, file = paste0(er_input$out_path, "essregCV_lambda_", lambda, ".rds"))
       }

@@ -20,13 +20,14 @@
 #' @param alpha_level \eqn{\alpha}, a numerical constant used in confidence interval calculation
 #' @param rep an integer indicating the replicate number
 #' @param out_path path for saving output
-#' @param benchmark a boolean flag that decides if running, pcr, pclr, plsr and plsda.
+#' @param benchmark a boolean flag that decides if running lasso, pcr, pclr, plsr and plsda.
+#' @param run_lasso a boolean flag that decides if running lasso for comparison
 #' @return An object of class \sQuote{data.frame}
 #' @export
 
 essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda = 0.1,
                      rep_cv = 50, alpha_level = 0.05, permute = T,y_levels = NULL,
-                     eval_type, out_path, rep, benchmark) {
+                     eval_type, out_path, rep, benchmark = F, run_lasso = F) {
 
   #get raw_x and get scaled x ###########################
   raw_x <- x
@@ -50,14 +51,13 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   #################################################################
   zero_in <- TRUE
   while (zero_in) {
-    
+
     if (y_factor) {
-      # create balanced folds based on classes
       group_inds <- caret::createFolds(factor(y), k = k, list = TRUE)
     } else {
-      # create folds
       group_inds <- caret::createFolds(y, k = k, list = TRUE)
     }
+
 
     y_groups_val <- NULL
     y_groups_train <- NULL
@@ -101,15 +101,14 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   ##                       Running Methods                       ##
   #################################################################
 
-  ## Decide what methods to run using the nature of the Y.
-  methods <- c("plainER", "lasso")
-
   if (benchmark){
     if (y_factor) {
-      methods <- c(methods, "plsda", "pclr")
+      methods <- c(methods, "lasso", "plsda", "pclr")
     } else {
-      methods <- c(methods, "plsr", "pcr")
+      methods <- c(methods, "lasso", "plsr", "pcr")
     }
+  } else if (run_lasso) {
+    methods <- c(methods, "lasso")
   }
 
   if (permute) {
@@ -154,6 +153,8 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
     colnames(train_x_std) <- colnames(valid_x_std) <- colnames(x)
 
     ## permute y's
+    # try sampling differently
+    # perm_ind = unlist(caret::createFolds(train_y, k = length(train_y) - 1))
     perm_ind <- sample(1:nrow(train_x_std))
     # note that if std_cv == FALSE, train_y_perm == train_y_perm_raw
     train_y_perm <- train_y[perm_ind]
@@ -165,7 +166,6 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       train_y_labs_perm <- factor(train_y_perm_raw, levels = y_levels)
       valid_y_labs <- factor(valid_y_raw, levels = y_levels)
     }
-    #cat("permuted y: ", train_y_labs_perm, "\n")
 
     ##----------------------------------------------------------------
     ##                   loop through all methods                   --
@@ -200,6 +200,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       ##  plainER   -
       ##-------------
       if (grepl(x = method_j, pattern = "plainER", fixed = TRUE)) { ## plain essential regression, predict with all Zs
+      
         res <- plainER(y = use_y_train_ER,
                        x = train_x_raw,
                        x_std = train_x_std,
@@ -210,6 +211,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                        thresh_fdr = thresh_fdr,
                        rep_cv = rep_cv,
                        alpha_level = alpha_level)
+        
         if (is.null(res)) {
           return (NULL)
         }
@@ -273,7 +275,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         valid_pcs <- scale(valid_x_std, princ_comps$center, princ_comps$scale) %*% princ_comps$rotation ## project validation set to PC space
         res <- stats::glm(as.numeric(as.character(use_y_train)) ~ ., data = as.data.frame(train_pcs), family = "binomial") ## make model
         pred_vals <- predict(res, newdata = as.data.frame(valid_pcs), type = "response") ## predict validation set values
-      } else { ## lasso for comparison
+      } else if (grepl(x = method_j, pattern = "lasso", fixed = TRUE)) { ## lasso for comparison
           if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
@@ -282,22 +284,53 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                                      standardize = F,
                                      grouped = F,
                                      family = lasso_fam)
+      } else { ## lasso for comparison
+          #if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
+          if (k == nrow(x)) { #LOOCV
+            cat("\n using LOOCV for lasso\n")
+            
+            # check if we're going to have a problem with cv.glmnet
+            if (min(table(as.factor(use_y_train))) <= 2) {
+              # we will have an error, so don't do cross val in glmnet
+              cat("\ncan't do cv.glmnet, trying glmnet instead\n")
+              res = glmnet::glmnet(x = train_x_std, y = use_y_train,
+                                   family = lasso_fam, alpha = 1,
+                                   lambda = 1,
+                                  standardize = F)
+
+              # in lieu of refactoring this entire thing, we are just going
+              # to add our lambda value to the res list
+              res$lambda.min = res$lambda
+            } else {
+              res <- glmnet::cv.glmnet(train_x_std,
+                                       y = as.factor(use_y_train),
+                                       alpha = 1,
+                                       nfolds = nrow(train_x_std),
+                                       standardize = F,
+                                       # type.measure = "class",
+                                       grouped = F,
+                                       family = lasso_fam)
+              }
           } else {
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
                                      alpha = 1,
-                                     nfolds = 10,
+                                     nfolds = 5,
                                      standardize = F,
                                      grouped = F,
                                    family = lasso_fam)
         }
+
         beta_hat <- coef(res, s = res$lambda.min)[-1]
         sub_beta_hat <- which(beta_hat != 0)
 
         ## if lasso selects no variable, randomly pick 5 features instead
         if (length(sub_beta_hat) == 0) {
           cat("Lasso selects no features - Randomly selecting 5 features. . . \n")
-          sub_beta_hat <- sample(1:ncol(train_x_std), 5)
+
+          sub_beta_hat <- ifelse(ncol(train_x_std) > 5, sample(1:ncol(train_x_std), 5), sample(1:ncol(train_x_std)))
+
+          # sub_beta_hat <- sample(1:ncol(train_x_std), 5)
         }
         ## predict and standardize - use linear model rather than glmnet object
         lasso_train <- as.data.frame(train_x_std[, sub_beta_hat])

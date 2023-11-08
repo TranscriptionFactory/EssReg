@@ -9,8 +9,14 @@
 parseRun <- function(yaml_path) {
   ## process arguments
   er_input <- yaml::yaml.load_file(yaml_path)
-  x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1))
-  y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1))
+  x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1, check.names = F))
+  y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1, check.names = F))
+
+  if (!is.null(er_input$mode)) {
+    cleaned_data = cleanData(xdata = x, ydata = y, er_input = er_input)
+    x = cleaned_data$x
+    y = cleaned_data$y
+  }
 
   x_std <- scale(x, T, T)
 

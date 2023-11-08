@@ -14,11 +14,14 @@
 pipelineER3 <- function(yaml_path) {
   ## process arguments
   er_input <- yaml::yaml.load_file(yaml_path)
-  x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1)) ## not standardized
-  y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1)) ## not standardized
+  x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1, check.names = F)) ## not standardized
+  y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1, check.names = F)) ## not standardized
+
+  ## remove any zero sd cols
+  x = x[, which(apply(x, 2, sd) != 0)]
   x_std <- scale(x, T, T)
 
-  dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
+  dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)  
 
   if (er_input$y_factor) {
     y <- toCont(y, er_input$y_levels)
@@ -27,8 +30,18 @@ pipelineER3 <- function(yaml_path) {
     y <- y$cont_y
   }
 
-  ##  Step 5: K-Fold Cross-Validation With Optimal Delta and Lambda  ###########
-  foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
+  # check with benchmark methods we're doing
+  run_lasso = F
+  if (!is.null(er_input$lasso) & er_input$lasso) {
+    run_lasso = T
+  }
+
+  if (er_input$k <= 0) {
+    er_input$k <- nrow(x) #LOOCV
+  }
+
+  lambda_rep = data.frame()
+  for (j in 1:er_input$nreps) {
     temp <- NULL
     while (is.null(temp)) {
       temp <- essregCV(k = er_input$k,
@@ -46,10 +59,11 @@ pipelineER3 <- function(yaml_path) {
                        alpha_level = er_input$alpha_level,
                        thresh_fdr = er_input$thresh_fdr,
                        rep = j,
-                       benchmark = er_input$benchmark)
+                       benchmark = er_input$benchmark,
+                       run_lasso = run_lasso)
     }
-    temp
-  } -> lambda_rep
+    lambda_rep = rbind(lambda_rep, temp)
+  }
   saveRDS(lambda_rep, paste0(er_input$out_path, "pipeline_step5.rds"))
 
   ## create boxplot of replicate correlations ##################################

@@ -16,8 +16,9 @@
 pipelineER1 <- function(yaml_path, steps = "all") {
   ## process arguments
   er_input <- yaml::yaml.load_file(yaml_path)
-  x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1)) ## not standardized
-  y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1)) ## not standardized
+  x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1, check.names = F)) ## not standardized
+  y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1, check.names = F)) ## not standardized
+  
   x_std <- scale(x, T, T)
 
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
@@ -34,11 +35,18 @@ pipelineER1 <- function(yaml_path, steps = "all") {
                  seq(0.01, 0.1, 0.01),
                  seq(0.1, 1, 0.1))
 
+  # check with benchmark methods we're doing
+  run_lasso = F
+  if (!is.null(er_input$lasso) & er_input$lasso) {
+    run_lasso = T
+  }
+
   ## Step 1: Coarse Delta Search #############################################
   if (file.exists(paste0(er_input$out_path, "pipeline_step1.rds"))) {
     coarse_res <- readRDS(paste0(er_input$out_path, "pipeline_step1.rds"))
   } else {
-    foreach::foreach (i = 1:length(deltas)) %dopar% {
+    coarse_res = list()
+    for (i in 1:length(deltas)) {
       cat(i, "\n")
       result <- plainER(y = y,
                         x = x, # x here is NOT z_scored x
@@ -55,8 +63,8 @@ pipelineER1 <- function(yaml_path, steps = "all") {
         cat("plainER failed --- infeasible linear program \n")
         return ()
       }
-      result
-    } -> coarse_res
+      coarse_res[[length(coarse_res) + 1]] = result
+    }
     saveRDS(coarse_res, file = paste0(er_input$out_path, "pipeline_step1.rds"))
   }
 
@@ -91,7 +99,8 @@ pipelineER1 <- function(yaml_path, steps = "all") {
                                  thresh_fdr = er_input$thresh_fdr,
                                  out_path = paste0(er_input$out_path, "step2_delta_", mag_delta, "/"),
                                  rep = j,
-                                 benchmark = er_input$benchmark)
+                                 benchmark = er_input$benchmark,
+                                 run_lasso = run_lasso)
             }
             result
           }
