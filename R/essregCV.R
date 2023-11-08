@@ -100,7 +100,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
   #################################################################
   ##                       Running Methods                       ##
   #################################################################
-
+  methods <- c("plainER")
   if (benchmark){
     if (y_factor) {
       methods <- c(methods, "lasso", "plsda", "pclr")
