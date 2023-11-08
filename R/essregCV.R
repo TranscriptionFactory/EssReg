@@ -140,7 +140,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       valid_x_std <- stands$valid_x
       valid_y <- stands$valid_y
 
-    # if we are z-scoring X outside of CV and not z-scoring Y
+      # if we are z-scoring X outside of CV and not z-scoring Y
     } else {
       train_x_std <- x[-valid_ind, ] ## training x's
       valid_x_std <- matrix(x[valid_ind, ], ncol = ncol(x)) ## validation x's
@@ -200,7 +200,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
       ##  plainER   -
       ##-------------
       if (grepl(x = method_j, pattern = "plainER", fixed = TRUE)) { ## plain essential regression, predict with all Zs
-      
+
         res <- plainER(y = use_y_train_ER,
                        x = train_x_raw,
                        x_std = train_x_std,
@@ -211,7 +211,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                        thresh_fdr = thresh_fdr,
                        rep_cv = rep_cv,
                        alpha_level = alpha_level)
-        
+
         if (is.null(res)) {
           return (NULL)
         }
@@ -276,19 +276,11 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
         res <- stats::glm(as.numeric(as.character(use_y_train)) ~ ., data = as.data.frame(train_pcs), family = "binomial") ## make model
         pred_vals <- predict(res, newdata = as.data.frame(valid_pcs), type = "response") ## predict validation set values
       } else if (grepl(x = method_j, pattern = "lasso", fixed = TRUE)) { ## lasso for comparison
-          if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
-            res <- glmnet::cv.glmnet(train_x_std,
-                                     use_y_train,
-                                     alpha = 1,
-                                     nfolds = 5,
-                                     standardize = F,
-                                     grouped = F,
-                                     family = lasso_fam)
-      } else { ## lasso for comparison
+
           #if ((nrow(train_x_std) / 10) < 3) { ## sample size too small
           if (k == nrow(x)) { #LOOCV
             cat("\n using LOOCV for lasso\n")
-            
+
             # check if we're going to have a problem with cv.glmnet
             if (min(table(as.factor(use_y_train))) <= 2) {
               # we will have an error, so don't do cross val in glmnet
@@ -296,7 +288,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
               res = glmnet::glmnet(x = train_x_std, y = use_y_train,
                                    family = lasso_fam, alpha = 1,
                                    lambda = 1,
-                                  standardize = F)
+                                   standardize = F)
 
               # in lieu of refactoring this entire thing, we are just going
               # to add our lambda value to the res list
@@ -310,7 +302,7 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                                        # type.measure = "class",
                                        grouped = F,
                                        family = lasso_fam)
-              }
+            }
           } else {
             res <- glmnet::cv.glmnet(train_x_std,
                                      use_y_train,
@@ -318,96 +310,96 @@ essregCV <- function(k = 5, y, x, delta, std_cv, std_y, thresh_fdr = 0.2, lambda
                                      nfolds = 5,
                                      standardize = F,
                                      grouped = F,
-                                   family = lasso_fam)
+                                     family = lasso_fam)
+          }
+
+          beta_hat <- coef(res, s = res$lambda.min)[-1]
+          sub_beta_hat <- which(beta_hat != 0)
+
+          ## if lasso selects no variable, randomly pick 5 features instead
+          if (length(sub_beta_hat) == 0) {
+            cat("Lasso selects no features - Randomly selecting 5 features. . . \n")
+
+            sub_beta_hat <- ifelse(ncol(train_x_std) > 5, sample(1:ncol(train_x_std), 5), sample(1:ncol(train_x_std)))
+
+            # sub_beta_hat <- sample(1:ncol(train_x_std), 5)
+          }
+          ## predict and standardize - use linear model rather than glmnet object
+          lasso_train <- as.data.frame(train_x_std[, sub_beta_hat])
+          lasso_valid <- as.data.frame(valid_x_std[, sub_beta_hat])
+          if (dim(lasso_valid)[[2]] ==1 ){
+            lasso_valid <- as.data.frame(t(valid_x_std[, sub_beta_hat]))
+          }
+          colnames(lasso_train) <- colnames(lasso_valid) <- paste0("X", sub_beta_hat)
+          if (y_factor) {
+            lasso_lm <- stats::glm(use_y_train ~ ., data = lasso_train, family = lasso_fam)
+          } else {
+            lasso_lm <- stats::lm(use_y_train ~ ., data = lasso_train)
+          }
+          pred_vals <- predict(lasso_lm, lasso_valid, type = "response")
+          # lasso_pred_vals <- t((t(pred_vals) - centers_y) / scales_y)
         }
 
-        beta_hat <- coef(res, s = res$lambda.min)[-1]
-        sub_beta_hat <- which(beta_hat != 0)
-
-        ## if lasso selects no variable, randomly pick 5 features instead
-        if (length(sub_beta_hat) == 0) {
-          cat("Lasso selects no features - Randomly selecting 5 features. . . \n")
-
-          sub_beta_hat <- ifelse(ncol(train_x_std) > 5, sample(1:ncol(train_x_std), 5), sample(1:ncol(train_x_std)))
-
-          # sub_beta_hat <- sample(1:ncol(train_x_std), 5)
+        if (eval_type == "auc") { ## if using area under roc curve to evaluate model fit
+          pred_vals <- as.data.frame(pred_vals)
+          if (ncol(pred_vals) > 1) {
+            pred_vals <- pred_vals[, 1]
+          }
+          fold_res <- cbind(method_j, pred_vals, as.numeric(as.character(valid_y_labs)))
+          #print(valid_y_labs)
+          colnames(fold_res) <- c("method", "pred_vals", "true_vals")
+          results <- rbind(results, fold_res)
+          #print(results)
+        } else { ## if using correlation to evaluate model fit
+          fold_res <- cbind(method_j, pred_vals, valid_y)
+          colnames(fold_res) <- c("method", "pred_vals", "true_vals")
+          results <- rbind(results, fold_res)
         }
-        ## predict and standardize - use linear model rather than glmnet object
-        lasso_train <- as.data.frame(train_x_std[, sub_beta_hat])
-        lasso_valid <- as.data.frame(valid_x_std[, sub_beta_hat])
-        if (dim(lasso_valid)[[2]] ==1 ){
-          lasso_valid <- as.data.frame(t(valid_x_std[, sub_beta_hat]))
-        }
-        colnames(lasso_train) <- colnames(lasso_valid) <- paste0("X", sub_beta_hat)
-        if (y_factor) {
-          lasso_lm <- stats::glm(use_y_train ~ ., data = lasso_train, family = lasso_fam)
-        } else {
-          lasso_lm <- stats::lm(use_y_train ~ ., data = lasso_train)
-        }
-        pred_vals <- predict(lasso_lm, lasso_valid, type = "response")
-        # lasso_pred_vals <- t((t(pred_vals) - centers_y) / scales_y)
-      }
-
-      if (eval_type == "auc") { ## if using area under roc curve to evaluate model fit
-        pred_vals <- as.data.frame(pred_vals)
-        if (ncol(pred_vals) > 1) {
-          pred_vals <- pred_vals[, 1]
-        }
-        fold_res <- cbind(method_j, pred_vals, as.numeric(as.character(valid_y_labs)))
-        #print(valid_y_labs)
-        colnames(fold_res) <- c("method", "pred_vals", "true_vals")
-        results <- rbind(results, fold_res)
-        #print(results)
-      } else { ## if using correlation to evaluate model fit
-        fold_res <- cbind(method_j, pred_vals, valid_y)
-        colnames(fold_res) <- c("method", "pred_vals", "true_vals")
-        results <- rbind(results, fold_res)
       }
     }
-  }
 
-  ## set results data frame column names
-  results <- as.data.frame(results)
-  final_results <- NULL
-  if (eval_type == "auc") {
-    for (i in 1:length(methods)) {
-      method_res <- results %>% dplyr::filter(method == methods[i])
-      predicted <- as.numeric(method_res$pred_vals)
-      true <- as.numeric(method_res$true_vals)
-      print("before prediction")
-      predicted[is.na(predicted)] <- median(predicted, na.rm = TRUE)
-      method_roc <- ROCR::prediction(predicted, true)
-      print("after prediction")
-      method_auc <- ROCR::performance(method_roc, "auc")
-      method_auc <- method_auc@y.values[[1]]
-      if (method_auc < 0.5) { ## if classifier auc is < 0.5, reverse it to be > 0.5
-        method_auc <- 1 - method_auc
+    ## set results data frame column names
+    results <- as.data.frame(results)
+    final_results <- NULL
+    if (eval_type == "auc") {
+      for (i in 1:length(methods)) {
+        method_res <- results %>% dplyr::filter(method == methods[i])
+        predicted <- as.numeric(method_res$pred_vals)
+        true <- as.numeric(method_res$true_vals)
+        print("before prediction")
+        predicted[is.na(predicted)] <- median(predicted, na.rm = TRUE)
+        method_roc <- ROCR::prediction(predicted, true)
+        print("after prediction")
+        method_auc <- ROCR::performance(method_roc, "auc")
+        method_auc <- method_auc@y.values[[1]]
+        if (method_auc < 0.5) { ## if classifier auc is < 0.5, reverse it to be > 0.5
+          method_auc <- 1 - method_auc
+        }
+        method_res <- c("method" = methods[i],
+                        "auc" = as.numeric(method_auc))
+        final_results <- rbind(final_results, method_res)
       }
-      method_res <- c("method" = methods[i],
-                      "auc" = as.numeric(method_auc))
-      final_results <- rbind(final_results, method_res)
+    } else {
+      for (i in 1:length(methods)) {
+        method_res <- results %>%
+          dplyr::filter(method == methods[i])
+        predicted <- as.numeric(method_res$pred_vals)
+        true <- as.numeric(method_res$true_vals)
+        method_corr <- cor(predicted, true, method = "spearman")
+        method_mse <- sum((predicted - true)^2) / length(predicted)
+        method_res <- c("method" = methods[i],
+                        "corr" = as.numeric(method_corr),
+                        "mse" = as.numeric(method_mse))
+        final_results <- rbind(final_results, method_res)
+      }
     }
-  } else {
-    for (i in 1:length(methods)) {
-      method_res <- results %>%
-        dplyr::filter(method == methods[i])
-      predicted <- as.numeric(method_res$pred_vals)
-      true <- as.numeric(method_res$true_vals)
-      method_corr <- cor(predicted, true, method = "spearman")
-      method_mse <- sum((predicted - true)^2) / length(predicted)
-      method_res <- c("method" = methods[i],
-                      "corr" = as.numeric(method_corr),
-                      "mse" = as.numeric(method_mse))
-      final_results <- rbind(final_results, method_res)
-    }
-  }
 
-  final_results <- as.data.frame(final_results)
-  final_results[, 2] <- as.numeric(final_results[, 2])
+    final_results <- as.data.frame(final_results)
+    final_results[, 2] <- as.numeric(final_results[, 2])
 
-  combined_res <- NULL
-  combined_res$each_fold <- results
-  combined_res$final_corr <- final_results
-  saveRDS(combined_res, file = paste0(new_dir, "results.rds"))
-  return (final_results)
+    combined_res <- NULL
+    combined_res$each_fold <- results
+    combined_res$final_corr <- final_results
+    saveRDS(combined_res, file = paste0(new_dir, "results.rds"))
+    return (final_results)
 }
