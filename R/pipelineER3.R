@@ -14,14 +14,8 @@
 pipelineER3 <- function(yaml_path) {
   ## process arguments
   er_input <- yaml::yaml.load_file(yaml_path)
-  x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1)) ## not standardized
-  y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1)) ## not standardized
-
-  if (!is.null(er_input$mode)) {
-    cleaned_data = cleanData(xdata = x, ydata = y, er_input = er_input)
-    x = cleaned_data$x
-    y = cleaned_data$y
-  }
+  x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1, check.names = F)) ## not standardized
+  y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1, check.names = F)) ## not standardized
 
   x_std <- scale(x, T, T)
 
@@ -39,33 +33,16 @@ pipelineER3 <- function(yaml_path) {
     y <- y$cont_y
   }
 
-  if (er_input$k <= 0) {
-    er_input$k <- length(y) #LOOCV
+  # check with benchmark methods we're doing
+  run_lasso = F
+  if (!is.null(er_input$lasso) & er_input$lasso) {
+    run_lasso = T
   }
 
-  ##  Step 5: K-Fold Cross-Validation With Optimal Delta and Lambda  ###########
-  # foreach::foreach (j = 1:er_input$nreps, .combine = rbind) %dopar% {
-  #   temp <- NULL
-  #   while (is.null(temp)) {
-  #     temp <- essregCV(k = er_input$k,
-  #                      x = x,
-  #                      y = y,
-  #                      std_y = er_input$std_y,
-  #                      std_cv = er_input$std_cv,
-  #                      delta = er_input$delta,
-  #                      permute = er_input$permute,
-  #                      eval_type = er_input$eval_type,
-  #                      y_levels = er_input$y_levels,
-  #                      lambda = er_input$lambda,
-  #                      out_path = er_input$out_path,
-  #                      rep_cv = er_input$rep_cv,
-  #                      alpha_level = er_input$alpha_level,
-  #                      thresh_fdr = er_input$thresh_fdr,
-  #                      rep = j,
-  #                      benchmark = er_input$benchmark)
-  #   }
-  #   temp
-  # } -> lambda_rep
+  if (er_input$k <= 0) {
+    er_input$k <- nrow(x) #LOOCV
+  }
+
   lambda_rep = data.frame()
   for (j in 1:er_input$nreps) {
     temp <- NULL
@@ -85,7 +62,8 @@ pipelineER3 <- function(yaml_path) {
                        alpha_level = er_input$alpha_level,
                        thresh_fdr = er_input$thresh_fdr,
                        rep = j,
-                       benchmark = er_input$benchmark)
+                       benchmark = er_input$benchmark,
+                       run_lasso = run_lasso)
     }
     lambda_rep = rbind(lambda_rep, temp)
   }

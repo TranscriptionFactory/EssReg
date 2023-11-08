@@ -36,6 +36,12 @@ pipelineER2 <- function(yaml_path, steps = "all") {
     y <- y$cont_y
   }
 
+  # check with benchmark methods we're doing
+  run_lasso = F
+  if (!is.null(er_input$lasso) & er_input$lasso) {
+    run_lasso = T
+  }
+
   ## Step 3: Fine Delta Search ###############################################
   if (steps == "all"){
     if (file.exists(paste0(er_input$out_path, "pipeline_step3.rds"))) {
@@ -107,7 +113,8 @@ pipelineER2 <- function(yaml_path, steps = "all") {
                                  alpha_level = er_input$alpha_level,
                                  thresh_fdr = er_input$thresh_fdr,
                                  rep = j,
-                                 benchmark = er_input$benchmark)
+                                 benchmark = er_input$benchmark,
+                                 run_lasso = run_lasso)
             }
             lambda_rep = rbind(lambda_rep, result)
           }
