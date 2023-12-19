@@ -32,7 +32,7 @@ pipelineER3 <- function(yaml_path) {
 
   # check with benchmark methods we're doing
   run_lasso = F
-  if (!is.null(er_input$lasso) & er_input$lasso) {
+  if (!is.null(er_input$lasso) && er_input$lasso) {
     run_lasso = T
   }
 
