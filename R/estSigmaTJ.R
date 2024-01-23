@@ -17,10 +17,12 @@ estSigmaTJ <- function(sigma, AI, pure_vec) {
   for (i in 1:ncol(AI)) {
     group_i <- which(AI[, i] != 0) #### get pure nodes in cluster i
     #### subset sigma_J to just rows of pure variables in cluster i
-    sigma_iJ <- as.matrix(sigma_J[group_i, ])
-    #### set row i of sigma_TJ to the mean correlations of the
-    #### nonpure variables across the pure variables in cluster i
-    sigma_TJ[i, ] <- apply(sigma_iJ, 2, mean)
+    if (length(group_i) > 0) {
+      sigma_iJ <- as.matrix(sigma_J[group_i, ])
+      #### set row i of sigma_TJ to the mean correlations of the
+      #### nonpure variables across the pure variables in cluster i
+      sigma_TJ[i, ] <- apply(sigma_iJ, 2, mean)
+    }
   }
   return(sigma_TJ)
 }
